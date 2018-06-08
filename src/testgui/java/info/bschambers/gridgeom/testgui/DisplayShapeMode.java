@@ -26,14 +26,14 @@ public class DisplayShapeMode extends CanvasMode {
         addKeyBinding('u', 'i',
                       () -> "prev/next shape-set (" + (1 + slot().shapeSetIndex()) +
                       " of " + slot().numShapeSets() + " --> " + shapeSet().name() + ")",
-                      () -> slot().previousShapeSet(),
-                      () -> slot().nextShapeSet());
+                      () -> previousShapeSet(),
+                      () -> nextShapeSet());
 
         addKeyBinding('o', 'p',
                       () -> "prev/next shape (" + (1 + shapeSet().index()) +
                       " of " + shapeSet().size() + " --> " + slot().wrapper().name() + ")",
-                      () -> slot().shapeSet().previousShape(),
-                      () -> slot().shapeSet().nextShape());
+                      () -> previousShape(),
+                      () -> nextShape());
     
         if (numSlots > 1)
             addKeyBinding('s',
@@ -50,10 +50,9 @@ public class DisplayShapeMode extends CanvasMode {
                       () -> previousVertex(),
                       () -> nextVertex());
 
-        // addKeyBinding('d', () -> "delete current vertex",
-        //               () -> clipCurrentVertex());
+        addKeyBinding('d', () -> "delete vertex", () -> deleteVertex());
 
-        // addKeyBinding('a', () -> "add vertex after current", () -> addVertex());
+        addKeyBinding('a', () -> "add vertex (after)", () -> addVertex());
 
         addKeyBinding('r', () -> "reset shape",
                       () -> {
@@ -61,17 +60,20 @@ public class DisplayShapeMode extends CanvasMode {
                           softUpdate();
                       });
 
-        // addKeyBinding('x', () -> "reflect (x-axis)",
-        //               () -> { shapeWrapper().reflectX();
-        //                       softUpdateAndRepaint(); });
+        addKeyBinding('x', () -> "reflect (x-axis)",
+                      () -> slot().wrapper().reflectX());
 
-        // addKeyBinding('y', () -> "reflect (y-axis)",
-        //               () -> { shapeWrapper().reflectY();
-        //                       softUpdateAndRepaint(); });
+        addKeyBinding('y', () -> "reflect (y-axis)",
+                      () -> slot().wrapper().reflectY());
 
         // addKeyBinding('z', () -> "rotate 90 degrees",
         //               () -> { shapeWrapper().rotate();
         //                       softUpdateAndRepaint(); });
+
+        addKeyBinding('P', () -> "print source code",
+                      () -> System.out.println("\n"
+                            + slot().shape().getSourceCode()
+                            + "\n\n... you can copy & paste this source code into your program...\n") );
 
         // addKeyBinding('S', () -> "save shape to disk",
         //               () -> { System.out.println("... serializing shape object..."); });
@@ -81,40 +83,6 @@ public class DisplayShapeMode extends CanvasMode {
 
     }
 
-    private void buildShapeSlots(int numSlots, ShapeSet[] shapeSets) {
-        // init
-        shapeSlots = new ShapeSlot[numSlots];
-        for (int i = 0; i < numSlots; i++) {
-            ShapeSet[] shapeSetsCopy = new ShapeSet[shapeSets.length];
-            for (int ii = 0; ii < shapeSets.length; ii++)
-                shapeSetsCopy[ii] = shapeSets[ii].copy();
-            shapeSlots[i] = new ShapeSlot(shapeSetsCopy);
-        }
-        // transpose each shape-set
-        int yStep = 12;
-        int y = (numSlots > 1 ?
-                 (yStep * numSlots) / 2 :
-                 0);
-        for (int i = 0; i < numSlots; i++) {
-            int yOffset =  y - (i * yStep);
-            shapeSlots[i].translate(0, yOffset);
-        }
-    }
-    
-    protected ShapeSlot slot() {
-        return shapeSlots[shapeSlotIndex];
-    }
-
-    protected ShapeSet shapeSet() { return slot().shapeSet(); }
-
-    private void switchShapeSlot() {
-        shapeSlotIndex++;
-        if (shapeSlotIndex >= shapeSlots.length)
-            shapeSlotIndex = 0;
-        keyCursorX = slot().wrapper().getPosX();
-        keyCursorY = slot().wrapper().getPosY();
-    }
-
     protected void softUpdate() {
         if (editMode)
             setCursorPos(slot().wrapper().getCanvasVertex());
@@ -122,19 +90,6 @@ public class DisplayShapeMode extends CanvasMode {
             setCursorPos(slot().wrapper().getPosition());
     }
     
-    private void toggleEditMode() {
-        editMode = !editMode;
-        softUpdate();
-    }
-
-    private void incrVertexIndex(int amount) {
-        slot().wrapper().incrVertexIndex(amount);
-        softUpdate();
-    }
-    
-    private void previousVertex() { incrVertexIndex(-1); }
-    private void nextVertex()     { incrVertexIndex(1); }
-
     @Override
     public void update() {
         super.update();
@@ -171,8 +126,96 @@ public class DisplayShapeMode extends CanvasMode {
 
     }
 
+
+
+    /*------------------------ SLOTS AND SHAPES ------------------------*/
+
+    private void buildShapeSlots(int numSlots, ShapeSet[] shapeSets) {
+        // init
+        shapeSlots = new ShapeSlot[numSlots];
+        for (int i = 0; i < numSlots; i++) {
+            ShapeSet[] shapeSetsCopy = new ShapeSet[shapeSets.length];
+            for (int ii = 0; ii < shapeSets.length; ii++)
+                shapeSetsCopy[ii] = shapeSets[ii].copy();
+            shapeSlots[i] = new ShapeSlot(shapeSetsCopy);
+        }
+        // transpose each shape-set
+        int yStep = 12;
+        int y = (numSlots > 1 ?
+                 (yStep * numSlots) / 2 :
+                 0);
+        for (int i = 0; i < numSlots; i++) {
+            int yOffset =  y - (i * yStep);
+            shapeSlots[i].translate(0, yOffset);
+        }
+    }
+    
+    protected ShapeSlot slot() {
+        return shapeSlots[shapeSlotIndex];
+    }
+
+    protected ShapeSet shapeSet() {
+        return slot().shapeSet();
+    }
+
+    private void switchShapeSlot() {
+        editMode = false;
+        shapeSlotIndex++;
+        if (shapeSlotIndex >= shapeSlots.length)
+            shapeSlotIndex = 0;
+        keyCursorX = slot().wrapper().getPosX();
+        keyCursorY = slot().wrapper().getPosY();
+    }
+
+    private void previousShapeSet() {
+        editMode = false;
+        slot().previousShapeSet();
+    }
+
+    private void nextShapeSet() {
+        editMode = false;
+        slot().nextShapeSet();
+    }
+
+    private void previousShape() {
+        editMode = false;
+        slot().shapeSet().previousShape();
+    }
+
+    private void nextShape() {
+        editMode = false;
+        slot().shapeSet().nextShape();
+    }
+
+
+    
+    /*------------------------- VERTEX EDITING -------------------------*/
+
     protected void setCurrentVertex(int x, int y) {
         slot().wrapper().setVertex(x, y);        
+    }
+
+    private void toggleEditMode() {
+        editMode = !editMode;
+        softUpdate();
+    }
+
+    private void incrVertexIndex(int amount) {
+        slot().wrapper().incrVertexIndex(amount);
+        softUpdate();
+    }
+    
+    private void previousVertex() { incrVertexIndex(-1); }
+    private void nextVertex()     { incrVertexIndex(1); }
+
+    private void deleteVertex() {
+        slot().wrapper().deleteCurrentVertex();
+        previousVertex();
+    }
+    
+    private void addVertex() {
+        slot().wrapper().addVertexAfterCurrent();
+        nextVertex();
     }
 
 

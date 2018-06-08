@@ -18,14 +18,6 @@ public class Pt2D {
     public int x() { return x; }
     public int y() { return y; }
 
-    public Pt2D transpose(int xx, int yy) {
-        return new Pt2D(x + xx, y + yy);
-    }
-
-    public Pt2Df toFloat() {
-        return new Pt2Df(x, y);
-    }
-
     @Override
     public boolean equals(Object obj) {
         // some safe optimizations
@@ -47,6 +39,10 @@ public class Pt2D {
         return p.x() == x && p.y() == y;
     }
 
+    public Pt2Df toFloat() {
+        return new Pt2Df(x, y);
+    }
+
     /**
      * Returns the slope between this point and the input point.
      * Formally, if the two points are (x0, y0) and (x1, y1), then the slope
@@ -66,9 +62,25 @@ public class Pt2D {
         return (p.y - (double) this.y) / (p.x - (double) this.x);
     }
 
+
+
+    /*------------------------ TRANSFORMATIONS -------------------------*/
+
     public Pt2D sum(Pt2D p) {
         return new Pt2D(x + p.x,
                         y + p.y);
+    }
+
+    public Pt2D transpose(int xx, int yy) {
+        return new Pt2D(x + xx, y + yy);
+    }
+
+    public Pt2D reflectX(int center) {
+        return new Pt2D(center - (x - center), y);
+    }
+
+    public Pt2D reflectY(int center) {
+        return new Pt2D(x, center - (y - center));
     }
 
 }

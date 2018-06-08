@@ -28,6 +28,17 @@ public class Geom2D {
         return end - start;
     }
 
+    public static int midPointInt(int a, int b) {
+        int low = Math.min(a, b);
+        int high = Math.max(a, b);
+        return low + ((high - low) / 2);
+    }
+    
+    public static Pt2D midPointInt(Pt2D p1, Pt2D p2) {
+        return new Pt2D (midPointInt(p1.x(), p2.x()),
+                         midPointInt(p1.y(), p2.y()));
+    }
+
 
 
     /*--------------------------- LINE ANGLE ---------------------------*/
@@ -79,7 +90,8 @@ public class Geom2D {
         double yDist = y2 - y1;
 
 	// TEST FOR DEGENERATE LINE CONDITION
-	if (xDist == 0 && yDist == 0) throw new IllegalArgumentException("degenerate line");
+	if (xDist == 0 && yDist == 0)
+            throw new IllegalArgumentException("degenerate line");
 
 	// TEST FOR ORTHOGONAL SPECIAL CASES
 	if (xDist == 0)

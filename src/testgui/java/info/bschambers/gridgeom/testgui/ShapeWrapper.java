@@ -94,6 +94,20 @@ public class ShapeWrapper {
         return sw;
     }
 
+    public void deleteCurrentVertex() {
+        modShape = modShape.deleteVertex(vertexIndex);
+    }
+
+    public void addVertexAfterCurrent() {
+        modShape = modShape.addVertexAfter(vertexIndex);
+    }
+
+    public void reflectX() {
+        modShape = modShape.reflectX();
+    }
+
+    public void reflectY() {
+        modShape = modShape.reflectY();
+    }
+
 }
-
-

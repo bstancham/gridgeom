@@ -47,6 +47,20 @@ public abstract class AbstractShape implements Iterable<Pt2D> {
         return nVertices;
     }
 
+    protected Pt2D[] reflectVerticesX(int center) {
+        Pt2D[] newVertices = new Pt2D[vertices.length];
+        for (int i = 0; i < vertices.length; i++)
+            newVertices[i] = vertices[i].reflectX(center);
+        return newVertices;
+    }
+
+    protected Pt2D[] reflectVerticesY(int center) {
+        Pt2D[] newVertices = new Pt2D[vertices.length];
+        for (int i = 0; i < vertices.length; i++)
+            newVertices[i] = vertices[i].reflectY(center);
+        return newVertices;
+    }
+
     public Set<Pt2Df> getIntersectionPoints(AbstractShape s) {
         Set<Pt2Df> points = new HashSet<>();
         // intersect all lines
@@ -135,7 +149,7 @@ public abstract class AbstractShape implements Iterable<Pt2D> {
 
     /*-------------------- PRIVATE UTILITY METHODS ---------------------*/
 
-    private int wrapIndex(int i) {
+    protected int wrapIndex(int i) {
         if (i < 0) return vertices.length - 1;
         if (i >= vertices.length) return 0;
         return i;

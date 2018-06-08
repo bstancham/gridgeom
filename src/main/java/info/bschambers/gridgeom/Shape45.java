@@ -231,6 +231,92 @@ public class Shape45 extends AbstractShape {
         return new Shape45(newSubs, newVertices);
     }
 
+    public Shape45 deleteVertex(int index) {
+        
+        // OUTLINE
+        int newLen = getNumVertices();
+        if (index < getNumVertices())
+            newLen--;
+        
+        Pt2D[] newVertices = new Pt2D[newLen];
+        for (int i = 0; i < getNumVertices(); i++) {
+            if (i < index)
+                newVertices[i] = super.getVertex(i);
+            else if (i > index)
+                newVertices[i - 1] = super.getVertex(i);
+        }
+        
+        // SUB-SHAPES
+        int count = getNumVertices();
+        Shape45[] newSubs = new Shape45[subShapes.length];
+        for (int i = 0; i < subShapes.length; i++) {
+            if (index - count < subShapes[i].getTotalNumVertices()) {
+                newSubs[i] = subShapes[i].deleteVertex(index - count);
+            } else {
+                newSubs[i] = subShapes[i];
+            }                
+            count += subShapes[i].getTotalNumVertices();
+        }
+
+        return new Shape45(newSubs, newVertices);
+    }
+
+    public Shape45 addVertexAfter(int index) {
+        
+        // OUTLINE
+        int len = (index < getNumVertices() ? getNumVertices() + 1 : getNumVertices());
+        Pt2D[] newVertices = new Pt2D[len];
+        for (int i = 0; i < getNumVertices(); i++) {
+            if (i <= index) {
+                newVertices[i] = super.getVertex(i);
+                
+                if (i == index) {
+                
+                    // new point equidistant between
+                    Pt2D v = Geom2D.midPointInt(super.getVertex(i),
+                                                super.getVertex(wrapIndex(i + 1)));
+
+                    // check not duplicate vertex...
+
+                    newVertices[i + 1] = v;
+                }
+
+            } else {
+                newVertices[i + 1] = super.getVertex(i);
+            }
+        }
+
+        // SUB-SHAPES
+        int count = getNumVertices();
+        Shape45[] newSubs = new Shape45[subShapes.length];
+        for (int i = 0; i < subShapes.length; i++) {
+            if (index - count < subShapes[i].getTotalNumVertices()) {
+                newSubs[i] = subShapes[i].deleteVertex(index - count);
+            } else {
+                newSubs[i] = subShapes[i];
+            }                
+            count += subShapes[i].getTotalNumVertices();
+        }
+
+        return new Shape45(newSubs, newVertices);
+    }
+
+    public Shape45 reflectX(int center) {
+        Shape45[] newSubs = new Shape45[subShapes.length];
+        for (int i = 0; i < subShapes.length; i++)
+            newSubs[i] = subShapes[i].reflectX(center);
+        Pt2D[] newVerts = reflectVerticesX(center);
+        return new Shape45(newSubs, newVerts);
+    }
+
+    public Shape45 reflectY(int center) {
+        Shape45[] newSubs = new Shape45[subShapes.length];
+        for (int i = 0; i < subShapes.length; i++)
+            newSubs[i] = subShapes[i].reflectY(center);
+        Pt2D[] newVerts = reflectVerticesY(center);
+        return new Shape45(newSubs, newVerts);
+    }
+
     public List<Shape45> subtract(Shape45 s) {
 
         // get edges
@@ -352,6 +438,41 @@ public class Shape45 extends AbstractShape {
             if (dist1 > dist2) return 1;
             else return 0;
         }
+    }
+
+
+
+    /*------------------------------ MISC ------------------------------*/
+
+    /**
+     * <p>Makes souce code for shape which can be pasted directly into program
+     * code.</p>
+     */
+    public String getSourceCode() {
+        StringBuffer sb = new StringBuffer();
+        sb.append("new Shape45(");
+
+        // SUB-SHAPES
+        if (subShapes.length == 1) {
+            sb.append(subShapes[0].getSourceCode() + ",\n");
+        } else if (subShapes.length > 1) {
+            sb.append("new Shape45[] {\n");
+            for (Shape45 s : subShapes) {
+                sb.append(subShapes[0].getSourceCode() + ",\n");
+            }
+            sb.append("},\n");
+        }
+
+        // OUTLINE
+        for (int i = 0; i < getNumVertices(); i++) {
+            Pt2D v = getVertex(i);
+            sb.append("new Pt2D(" + v.x() + ", " + v.y() + ")");
+            if (i < getNumVertices() - 1)
+                sb.append(", ");
+        }
+        
+        sb.append(")");
+        return sb.toString();
     }
 
 }

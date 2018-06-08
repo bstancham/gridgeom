@@ -22,6 +22,7 @@ public class ShapeGroup implements Iterable<Shape45> {
 
     private Shape45[] shapes;
     private Integer numVertices = null;
+    private Box2D boundingBox;
     private Triangle[] triangles = null;
 
     public ShapeGroup(Shape45 s) {
@@ -129,6 +130,50 @@ public class ShapeGroup implements Iterable<Shape45> {
         return new ShapeGroup(nShapes);
     }
 
+    public ShapeGroup deleteVertex(int index) {
+        int count = 0;
+        Shape45[] newShapes = new Shape45[shapes.length];
+        for (int i = 0; i < shapes.length; i++) {
+            if (index - count < shapes[i].getTotalNumVertices()) {
+                newShapes[i] = shapes[i].deleteVertex(index - count);
+            } else {
+                newShapes[i] = shapes[i];
+            }
+            count += shapes[i].getTotalNumVertices();
+        }
+        return new ShapeGroup(newShapes);
+    }
+
+    public ShapeGroup addVertexAfter(int index) {
+        int count = 0;
+        Shape45[] newShapes = new Shape45[shapes.length];
+        for (int i = 0; i < shapes.length; i++) {
+            if (index - count < shapes[i].getTotalNumVertices()) {
+                newShapes[i] = shapes[i].addVertexAfter(index - count);
+            } else {
+                newShapes[i] = shapes[i];
+            }
+            count += shapes[i].getTotalNumVertices();
+        }
+        return new ShapeGroup(newShapes);
+    }
+
+    public ShapeGroup reflectX() {
+        int center = getCenterX();
+        Shape45[] newShapes = new Shape45[shapes.length];
+        for (int i = 0; i < shapes.length; i++)
+            newShapes[i] = shapes[i].reflectX(center);
+        return new ShapeGroup(newShapes);
+    }
+
+    public ShapeGroup reflectY() {
+        int center = getCenterY();
+        Shape45[] newShapes = new Shape45[shapes.length];
+        for (int i = 0; i < shapes.length; i++)
+            newShapes[i] = shapes[i].reflectY(center);
+        return new ShapeGroup(newShapes);
+    }
+
     public ShapeGroup subtract(ShapeGroup sg) {
         ShapeGroup output = this;
         for (Shape45 s : sg)
@@ -173,6 +218,40 @@ public class ShapeGroup implements Iterable<Shape45> {
         return points;
     }
 
+    public Box2D getBoundingBox() {
+        if (boundingBox == null)
+            makeBoundingBox();
+        return boundingBox;
+    }
+
+    public int getCenterX() {
+        if (boundingBox == null)
+            makeBoundingBox();
+        return boundingBox.centerX;
+    }
+
+    public int getCenterY() {
+        if (boundingBox == null)
+            makeBoundingBox();
+        return boundingBox.centerY;
+    }
+
+    public void makeBoundingBox() {
+        Pt2D v = getVertex(0);
+        int lowX  = v.x();
+        int highX = v.x();
+        int lowY  = v.y();
+        int highY = v.y();
+        for (int i = 1; i < getNumVertices(); i++) {
+            v = getVertex(i);
+            if (v.x() < lowX)  lowX  = v.x();
+            if (v.x() > highX) highX = v.x();
+            if (v.y() < lowY)  lowY  = v.y();
+            if (v.y() > highY) highY = v.y();
+        }
+        boundingBox = new Box2D(lowX, lowY, highX, highY);
+    }
+    
     
 
     /*--------------------------- ITERATION ----------------------------*/
@@ -208,5 +287,26 @@ public class ShapeGroup implements Iterable<Shape45> {
             return i < triangles.length;
         }
     }
-    
+
+
+
+    /*------------------------------ MISC ------------------------------*/
+
+    /**
+     * <p>Makes souce code for shape which can be pasted directly into program
+     * code.</p>
+     */
+    public String getSourceCode() {
+        StringBuffer sb = new StringBuffer();
+        sb.append("new ShapeGroup(");
+        for (int i = 0; i < shapes.length; i++) {
+            Shape45 s = shapes[i];
+            sb.append(s.getSourceCode());
+            if (i < shapes.length - 1)
+                sb.append(",\n");
+        }
+        sb.append(")");
+        return sb.toString();
+    }
+
 }
