@@ -174,6 +174,13 @@ public class ShapeGroup implements Iterable<Shape45> {
         return new ShapeGroup(newShapes);
     }
 
+    public ShapeGroup reverseWinding() {
+        Shape45[] nShapes = new Shape45[shapes.length];
+        for (int i = 0; i < shapes.length; i++)
+            nShapes[i] = shapes[i].reverseWinding();
+        return new ShapeGroup(nShapes);
+    }
+
     public ShapeGroup subtract(ShapeGroup sg) {
         ShapeGroup output = this;
         for (Shape45 s : sg)
@@ -293,7 +300,7 @@ public class ShapeGroup implements Iterable<Shape45> {
     /*------------------------------ MISC ------------------------------*/
 
     /**
-     * <p>Makes souce code for shape which can be pasted directly into program
+     * <p>Makes source code for shape which can be pasted directly into program
      * code.</p>
      */
     public String getSourceCode() {

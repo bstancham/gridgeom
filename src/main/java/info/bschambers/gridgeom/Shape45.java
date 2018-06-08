@@ -200,6 +200,14 @@ public class Shape45 extends AbstractShape {
         return new Shape45(newSubs, newVerts);
     }
 
+    public Shape45 reverseWinding() {
+        Shape45[] newSubs = new Shape45[subShapes.length];
+        for (int i = 0; i < subShapes.length; i++)
+            newSubs[i] = subShapes[i].reverseWinding();
+        Pt2D[] newVerts = reverseVertices();
+        return new Shape45(newSubs, newVerts);
+    }
+
     /**
      * @return A new {@code Shape45} which is an identical copy of this one,
      * except with the vertex at index {@code i} set to the given {@code x/y}

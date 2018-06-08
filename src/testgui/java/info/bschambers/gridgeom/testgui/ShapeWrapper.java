@@ -110,4 +110,8 @@ public class ShapeWrapper {
         modShape = modShape.reflectY();
     }
 
+    public void reverseWinding() {
+        modShape = modShape.reverseWinding();
+    }
+
 }

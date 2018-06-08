@@ -89,6 +89,10 @@ public abstract class CanvasMode {
 
     public List<KeyBinding> getKeyBindings() { return bindings; }
 
+    public void addKeyBinding(char c, String description, Runnable action) {
+        bindings.add(new KeyBinding(c, description, action));
+    }
+
     public void addKeyBinding(char c, Supplier<String> description, Runnable action) {
         bindings.add(new KeyBinding(c, description, action));
     }

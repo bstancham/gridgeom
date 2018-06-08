@@ -44,33 +44,36 @@ public class DisplayShapeMode extends CanvasMode {
         addKeyBinding('e', () -> "shape editing mode " + boolStr(editMode),
                       () -> toggleEditMode());
 
+        addKeyBinding('r', "reset shape",
+                      () -> {
+                          slot().wrapper().reset();
+                          softUpdate();
+                      });
+
         addKeyBinding('[', ']',
                       () -> "prev/next vertex (" + (1 + slot().wrapper().vertexIndex()) +
                       " of " + slot().shape().getNumVertices() + ")",
                       () -> previousVertex(),
                       () -> nextVertex());
 
-        addKeyBinding('d', () -> "delete vertex", () -> deleteVertex());
+        addKeyBinding('d', "delete vertex", () -> deleteVertex());
 
-        addKeyBinding('a', () -> "add vertex (after)", () -> addVertex());
+        addKeyBinding('a', "add vertex (after)", () -> addVertex());
 
-        addKeyBinding('r', () -> "reset shape",
-                      () -> {
-                          slot().wrapper().reset();
-                          softUpdate();
-                      });
-
-        addKeyBinding('x', () -> "reflect (x-axis)",
+        addKeyBinding('x', "reflect (x-axis)",
                       () -> slot().wrapper().reflectX());
 
-        addKeyBinding('y', () -> "reflect (y-axis)",
+        addKeyBinding('y', "reflect (y-axis)",
                       () -> slot().wrapper().reflectY());
 
         // addKeyBinding('z', () -> "rotate 90 degrees",
         //               () -> { shapeWrapper().rotate();
         //                       softUpdateAndRepaint(); });
 
-        addKeyBinding('P', () -> "print source code",
+        addKeyBinding('w', "reverse winding",
+                      () -> slot().wrapper().reverseWinding());
+
+        addKeyBinding('P', "print source code",
                       () -> System.out.println("\n"
                             + slot().shape().getSourceCode()
                             + "\n\n... you can copy & paste this source code into your program...\n") );

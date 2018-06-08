@@ -47,6 +47,13 @@ public abstract class AbstractShape implements Iterable<Pt2D> {
         return nVertices;
     }
 
+    protected Pt2D[] reverseVertices() {
+        Pt2D[] nVertices = new Pt2D[vertices.length];
+        for (int i = 0; i < vertices.length; i++)
+            nVertices[i] = vertices[vertices.length - 1 - i];
+        return nVertices;
+    }
+
     protected Pt2D[] reflectVerticesX(int center) {
         Pt2D[] newVertices = new Pt2D[vertices.length];
         for (int i = 0; i < vertices.length; i++)
