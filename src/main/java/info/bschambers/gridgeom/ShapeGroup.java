@@ -174,11 +174,35 @@ public class ShapeGroup implements Iterable<Shape45> {
         return new ShapeGroup(newShapes);
     }
 
+    public ShapeGroup rotate90(int centerX, int centerY) {
+        Shape45[] newShapes = new Shape45[shapes.length];
+        for (int i = 0; i < shapes.length; i++)
+            newShapes[i] = shapes[i].rotate90(centerX, centerY);
+        return new ShapeGroup(newShapes);
+    }
+
     public ShapeGroup reverseWinding() {
         Shape45[] nShapes = new Shape45[shapes.length];
         for (int i = 0; i < shapes.length; i++)
             nShapes[i] = shapes[i].reverseWinding();
         return new ShapeGroup(nShapes);
+    }
+
+    public ShapeGroup addContainingBox() {
+
+        Box2D box = getBoundingBox();
+        Pt2D[] verts = new Pt2D[4];
+        verts[0] = new Pt2D(box.lowX - 1,  box.lowY -1);
+        verts[1] = new Pt2D(box.highX + 1, box.lowY -1);
+        verts[2] = new Pt2D(box.highX + 1, box.highY + 1);
+        verts[3] = new Pt2D(box.lowX - 1,  box.highY + 1);
+
+        Shape45[] subs = new Shape45[shapes.length];
+        for (int i = 0; i < subs.length; i++)
+            subs[i] = shapes[i].reverseWinding();
+
+        Shape45 container = new Shape45(subs, verts);
+        return new ShapeGroup(container);
     }
 
     public ShapeGroup subtract(ShapeGroup sg) {

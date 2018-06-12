@@ -68,6 +68,13 @@ public abstract class AbstractShape implements Iterable<Pt2D> {
         return newVertices;
     }
 
+    protected Pt2D[] rotateVertices90(int centerX, int centerY) {
+        Pt2D[] newVertices = new Pt2D[vertices.length];
+        for (int i = 0; i < vertices.length; i++)
+            newVertices[i] = vertices[i].rotate90(centerX, centerY);
+        return newVertices;
+    }
+
     public Set<Pt2Df> getIntersectionPoints(AbstractShape s) {
         Set<Pt2Df> points = new HashSet<>();
         // intersect all lines

@@ -66,12 +66,14 @@ public class DisplayShapeMode extends CanvasMode {
         addKeyBinding('y', "reflect (y-axis)",
                       () -> slot().wrapper().reflectY());
 
-        // addKeyBinding('z', () -> "rotate 90 degrees",
-        //               () -> { shapeWrapper().rotate();
-        //                       softUpdateAndRepaint(); });
+        addKeyBinding('z', () -> "rotate 90 degrees",
+                      () -> slot().wrapper().rotate90());
 
         addKeyBinding('w', "reverse winding",
                       () -> slot().wrapper().reverseWinding());
+
+        addKeyBinding('c', "add containing box",
+                      () -> slot().wrapper().addContainingBox());
 
         addKeyBinding('P', "print source code",
                       () -> System.out.println("\n"

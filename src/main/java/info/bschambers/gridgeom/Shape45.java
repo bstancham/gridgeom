@@ -91,7 +91,18 @@ public class Shape45 extends AbstractShape {
         // index is out of range
         return null;
     }
+
+    public boolean containsVertex(Pt2D v) {
+        for (Pt2D vv : this)
+            if (v.equals(vv))
+                return true;
+        return false;
+    }
     
+
+    
+    /*--------------------------- DIAGNOSTIC ---------------------------*/
+
     /**
      * <p>Returns true if shape is valid. False otherwise.</p>
      *
@@ -118,10 +129,6 @@ public class Shape45 extends AbstractShape {
         
         return true;
     }
-
-
-    
-    /*--------------------------- DIAGNOSTIC ---------------------------*/
 
     /**
      * <p>WARNING: Not guaranteed to work unless shape is 45-compliant.</p>
@@ -245,7 +252,6 @@ public class Shape45 extends AbstractShape {
         int newLen = getNumVertices();
         if (index < getNumVertices())
             newLen--;
-        
         Pt2D[] newVertices = new Pt2D[newLen];
         for (int i = 0; i < getNumVertices(); i++) {
             if (i < index)
@@ -258,8 +264,10 @@ public class Shape45 extends AbstractShape {
         int count = getNumVertices();
         Shape45[] newSubs = new Shape45[subShapes.length];
         for (int i = 0; i < subShapes.length; i++) {
-            if (index - count < subShapes[i].getTotalNumVertices()) {
+            if (count < index &&
+                index - count < subShapes[i].getTotalNumVertices()) {
                 newSubs[i] = subShapes[i].deleteVertex(index - count);
+                count--;
             } else {
                 newSubs[i] = subShapes[i];
             }                
@@ -277,18 +285,15 @@ public class Shape45 extends AbstractShape {
         for (int i = 0; i < getNumVertices(); i++) {
             if (i <= index) {
                 newVertices[i] = super.getVertex(i);
-                
                 if (i == index) {
-                
                     // new point equidistant between
                     Pt2D v = Geom2D.midPointInt(super.getVertex(i),
                                                 super.getVertex(wrapIndex(i + 1)));
-
-                    // check not duplicate vertex...
-
+                    // make sure not duplicate vertex before adding it
+                    while (containsVertex(v))
+                        v = v.transpose(0, 1);
                     newVertices[i + 1] = v;
                 }
-
             } else {
                 newVertices[i + 1] = super.getVertex(i);
             }
@@ -298,8 +303,10 @@ public class Shape45 extends AbstractShape {
         int count = getNumVertices();
         Shape45[] newSubs = new Shape45[subShapes.length];
         for (int i = 0; i < subShapes.length; i++) {
-            if (index - count < subShapes[i].getTotalNumVertices()) {
-                newSubs[i] = subShapes[i].deleteVertex(index - count);
+            if (count < index &&
+                index - count < subShapes[i].getTotalNumVertices()) {
+                newSubs[i] = subShapes[i].addVertexAfter(index - count);
+                count++;
             } else {
                 newSubs[i] = subShapes[i];
             }                
@@ -322,6 +329,14 @@ public class Shape45 extends AbstractShape {
         for (int i = 0; i < subShapes.length; i++)
             newSubs[i] = subShapes[i].reflectY(center);
         Pt2D[] newVerts = reflectVerticesY(center);
+        return new Shape45(newSubs, newVerts);
+    }
+
+    public Shape45 rotate90(int centerX, int centerY) {
+        Shape45[] newSubs = new Shape45[subShapes.length];
+        for (int i = 0; i < subShapes.length; i++)
+            newSubs[i] = subShapes[i].rotate90(centerX, centerY);
+        Pt2D[] newVerts = rotateVertices90(centerX, centerY);
         return new Shape45(newSubs, newVerts);
     }
 
@@ -476,7 +491,7 @@ public class Shape45 extends AbstractShape {
             Pt2D v = getVertex(i);
             sb.append("new Pt2D(" + v.x() + ", " + v.y() + ")");
             if (i < getNumVertices() - 1)
-                sb.append(", ");
+                sb.append(",\n");
         }
         
         sb.append(")");

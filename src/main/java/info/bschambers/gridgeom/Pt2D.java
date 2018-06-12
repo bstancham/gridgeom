@@ -83,4 +83,9 @@ public class Pt2D {
         return new Pt2D(x, center - (y - center));
     }
 
+    public Pt2D rotate90(int centerX, int centerY) {
+        return new Pt2D(centerX +  (y - centerY),
+                        centerY + -(x - centerX));
+    }
+    
 }

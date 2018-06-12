@@ -110,8 +110,17 @@ public class ShapeWrapper {
         modShape = modShape.reflectY();
     }
 
+    public void rotate90() {
+        modShape = modShape.rotate90(modShape.getCenterX(),
+                                     modShape.getCenterY());
+    }
+
     public void reverseWinding() {
         modShape = modShape.reverseWinding();
+    }
+
+    public void addContainingBox() {
+        modShape = modShape.addContainingBox();
     }
 
 }
