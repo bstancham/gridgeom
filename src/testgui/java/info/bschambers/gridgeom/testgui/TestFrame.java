@@ -14,12 +14,12 @@ public class TestFrame extends JFrame
 
     private CanvasPanel canvas;
 
-    public TestFrame(String title, CanvasMode[] modes) {
+    public TestFrame(String title, CanvasMode[] modes, ShapeSet[] shapeSets) {
 	super(title);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // canvas to paint on
-        canvas = new CanvasPanel(modes);
+        canvas = new CanvasPanel(2, shapeSets, modes);
 	setContentPane(createContentPane((Component) canvas));
 
         canvas.addMouseListener(this);
@@ -135,14 +135,16 @@ public class TestFrame extends JFrame
     @Override
     public void keyTyped(KeyEvent e) {
         // System.out.println("key typed: " + e.getKeyChar());
-        char c = e.getKeyChar();
 
-        try {
-            int i = Integer.parseInt("" + c);
-            canvas.switchMode(i);
-        } catch (Exception ex) {}
+        // if canvas keybindings don't overshadow, then handle key locally
+        if (!canvas.keyTyped(e)) {
+            try {
+                char c = e.getKeyChar();
+                int i = Integer.parseInt("" + c);
+                canvas.switchMode(i);
+            } catch (Exception ex) {}
+        }
         
-        canvas.keyTyped(e);
         canvas.update();
         repaint();
     }

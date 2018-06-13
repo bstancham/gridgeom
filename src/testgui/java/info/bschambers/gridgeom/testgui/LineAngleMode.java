@@ -20,7 +20,7 @@ public class LineAngleMode extends CanvasMode {
     private Color lineLengthColor =   new Color(48, 175, 191);
     
     public LineAngleMode() {
-        bindings.add(new KeyBinding('s', "switch ends", () -> switchEnds()));
+        getKeys().add('s', "switch ends", () -> switchEnds());
         setKeyCursorToCurrentPoint();
     }
 
@@ -47,7 +47,7 @@ public class LineAngleMode extends CanvasMode {
         
         Line line1 = new Line(points[0], points[1]);
         Line line2 = new Line(points[1], points[2]);
-        paintGrid(g);
+        getCanvas().paintGrid(g);
         
         // draw lines and basic info
         g.setColor(Color.CYAN);

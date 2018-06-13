@@ -7,10 +7,6 @@ import java.awt.event.KeyEvent;
 import javax.swing.JFrame;
 import info.bschambers.gridgeom.*;
 
-public class IntersectShapesMode extends DisplayShapeMode {
+public class IntersectShapesMode extends DisplayShapesMode {
 
-    public IntersectShapesMode(ShapeSet[] shapeSets) {
-        super(2, shapeSets);
-    }
-    
 }

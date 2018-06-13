@@ -7,14 +7,14 @@ import java.awt.event.KeyEvent;
 import javax.swing.JFrame;
 import info.bschambers.gridgeom.*;
 
-public class ValidateShapeMode extends DisplayShapeMode {
+public class ValidateShapeMode extends DisplayShapesMode {
 
     private TextBlock text = new TextBlock(500, 10);
 
-    public ValidateShapeMode(ShapeSet[] shapeSets) {
-        super(1, shapeSets);
-        // text.setBGColor(Color.RED);
-    }
+    // public ValidateShapeMode(ShapeSet[] shapeSets) {
+    //     super(1, shapeSets);
+    //     // text.setBGColor(Color.RED);
+    // }
 
     @Override
     public void update() {

@@ -18,9 +18,12 @@ public class KeyBinding {
         this.action = action;
     }
 
-    public void keyTyped(char c) {
-        if (c == this.c)
+    public boolean keyTyped(char c) {
+        if (c == this.c) {
             action.run();
+            return true;
+        }
+        return false;
     }
 
     public String getHelpText() {
@@ -46,11 +49,17 @@ public class KeyBinding {
             this.action2 = action2;
         }
 
-        public void keyTyped(char c) {
-            if (c == this.c)
+        @Override
+        public boolean keyTyped(char c) {
+            if (c == this.c) {
                 action.run();
-            if (c == this.c2)
+                return true;
+            }
+            if (c == this.c2) {
                 action2.run();
+                return true;
+            }
+            return false;
         }
 
         public String getHelpText() {

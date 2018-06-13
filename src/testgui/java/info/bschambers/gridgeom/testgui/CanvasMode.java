@@ -15,12 +15,11 @@ import info.bschambers.gridgeom.Pt2D;
 public abstract class CanvasMode {
 
     private String title;
+    private KbdMode keys = new KbdMode();
+    private CanvasPanel canvas = null;
+
     protected int keyCursorX = 5;
     protected int keyCursorY = 5;
-    protected List<KeyBinding> bindings = new ArrayList<KeyBinding>();
-    private CanvasPanel canvas = null;
-    private int gridSizeX = 40;
-    private int gridSizeY = 20;
 
     public CanvasMode() {
         title = getClass().getSimpleName();
@@ -34,30 +33,31 @@ public abstract class CanvasMode {
         return canvas;
     }
 
+    protected ShapeSlot slot() {
+        return getCanvas().slot();
+    }
+
     public String getTitle() {
         return title;
     }
 
     protected Gfx gfx() {
-        return getCanvas().getGfx();
+        return getCanvas().gfx();
     }
 
     public abstract void paint(Graphics g);
-
-    public void paintGrid(Graphics g) {
-        g.setColor(Color.BLUE);
-        gfx().grid(g, gridSizeX, gridSizeY);
-    }
 
     public void paintKbdCursor(Graphics g) {
         g.setColor(Color.WHITE);
         gfx().crosshairs(g, keyCursorX, keyCursorY, 8);
     }
+
+    public KbdMode getKeys() {
+        return keys;
+    }
     
-    public void keyTyped(KeyEvent e) {
-        char c = e.getKeyChar();
-        for (KeyBinding kb : bindings)
-            kb.keyTyped(c);
+    public boolean keyTyped(KeyEvent e) {
+        return getKeys().keyTyped(e);
     }
 
     /**
@@ -72,38 +72,23 @@ public abstract class CanvasMode {
         if (code == KeyEvent.VK_UP) keyCursorY++;
     }
 
+    public List<KeyBinding> getKeyBindings() {
+        return getKeys().getKeyBindings();
+    }
+    
     /**
      * <p>Gets called before {@code paint()}. Child classes may override this to
      * do what they need, but must remember to call {@code super.update()}.</p>
      */
     protected void update() {}
 
-    protected void setCursorPos(Pt2D p) {
-        setCursorPos(p.x(), p.y());
+    public void setKeyCursorPos(Pt2D p) {
+        setKeyCursorPos(p.x(), p.y());
     }
     
-    protected void setCursorPos(int x, int y) {
+    public void setKeyCursorPos(int x, int y) {
         keyCursorX = x;
         keyCursorY = y;
-    }
-
-    public List<KeyBinding> getKeyBindings() { return bindings; }
-
-    public void addKeyBinding(char c, String description, Runnable action) {
-        bindings.add(new KeyBinding(c, description, action));
-    }
-
-    public void addKeyBinding(char c, Supplier<String> description, Runnable action) {
-        bindings.add(new KeyBinding(c, description, action));
-    }
-
-    public void addKeyBinding(char c1, char c2, Supplier<String> description,
-                              Runnable action1, Runnable action2) {
-        bindings.add(new KeyBinding.Double(c1, c2, description, action1, action2));
-    }
-
-    protected String boolStr(boolean val) {
-        return "(" + (val ? "TRUE" : "FALSE" ) + ")";
     }
 
 }

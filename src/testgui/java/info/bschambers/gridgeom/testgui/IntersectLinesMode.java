@@ -26,14 +26,14 @@ public class IntersectLinesMode extends CanvasMode {
     private Pt2D end2   = new Pt2D(4, 8);
 
     public IntersectLinesMode() {
-        bindings.add(new KeyBinding('a', "edit line 1 start",
-                                    () -> editEnd(End.Line1Start)));
-        bindings.add(new KeyBinding('s', "edit line 1 end",
-                                    () -> editEnd(End.Line1End)));
-        bindings.add(new KeyBinding('d', "edit line 2 start",
-                                    () -> editEnd(End.Line2Start)));
-        bindings.add(new KeyBinding('f', "edit line 2 end",
-                                    () -> editEnd(End.Line2End)));
+        getKeys().add('a', "edit line 1 start",
+                 () -> editEnd(End.Line1Start));
+        getKeys().add('s', "edit line 1 end",
+                 () -> editEnd(End.Line1End));
+        getKeys().add('d', "edit line 2 start",
+                 () -> editEnd(End.Line2Start));
+        getKeys().add('f', "edit line 2 end",
+                 () -> editEnd(End.Line2End));
     }
 
     private void editEnd(End e) {
@@ -70,7 +70,7 @@ public class IntersectLinesMode extends CanvasMode {
     @Override
     public void paint(Graphics g) {
 
-        paintGrid(g);
+        getCanvas().paintGrid(g);
         
         Line l1 = new Line(start1, end1);
         Line l2 = new Line(start2, end2);

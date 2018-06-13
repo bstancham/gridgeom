@@ -9,15 +9,12 @@ public class App {
         CanvasMode[] modes = new CanvasMode[] {
             new LineAngleMode(),
             new IntersectLinesMode(),
-            new DisplayShapeMode(1, makeShapeSets()),
-            new ValidateShapeMode(makeShapeSets()),
-            // new TriangulateShapeMode(shapes),
-            new IntersectShapesMode(makeShapeSets()),
-            // new InsideShapeMode(shapes),
+            new DisplayShapesMode(),
         };
 
         TestFrame frame
-            = new TestFrame("grid-triangulation interactive tester", modes);
+            = new TestFrame("grid-triangulation interactive tester",
+                            modes, makeShapeSets());
         frame.showFrame(0, 0, 1200, 800);
     }
 
