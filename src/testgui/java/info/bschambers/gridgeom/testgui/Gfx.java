@@ -40,84 +40,10 @@ public class Gfx {
         scaling += amt;
         if (scaling < 1) scaling = 1;
     }
-    
-    public void crosshairs(Graphics g, Pt2Df p, int size) {
-        crosshairs(g, p.x(), p.y(), size);
-    }
-    
-    public void crosshairs(Graphics g, float x, float y, int size) {
-        int half = size / 2;
-        g.drawLine(getX(x) - half, getY(y),        getX(x) + half, getY(y));
-        g.drawLine(getX(x),        getY(y) - half, getX(x),        getY(y) + half);
-    }
-    
-    public void crosshairs(Graphics g, int x, int y, int size) {
-        int half = size / 2;
-        g.drawLine(getX(x) - half, getY(y),        getX(x) + half, getY(y));
-        g.drawLine(getX(x),        getY(y) - half, getX(x),        getY(y) + half);
-    }
-    
-    public void shapeNestedDepthFade(Graphics g, ShapeGroup sg, Color c) {
-        for (Shape45 s : sg)
-            shapeNestedDepthFade(g, s, c);
-    }
-    
-    public void shapeNestedDepthFade(Graphics g, Shape45 s, Color c) {
 
-        // paint outline
-        g.setColor(c);
-        abstractShape(g, s, 0, 0);
-
-        // get color for sub-shapes
-        int depth = s.getNestedDepth();
-        Color subColor = Gfx.relativeBrightness(c, 1.0 - (1.0 / depth));
-
-        // paint sub-shapes
-        for (Shape45 sub : s.getSubShapes())
-            shapeNestedDepthFade(g, sub, subColor);
-    }
     
-    public void shape(Graphics g, ShapeGroup shape) {
-        shape(g, shape, 0, 0);
-    }
-    
-    public void shape(Graphics g, ShapeGroup shape, int x, int y) {
-        for (Shape45 s : shape)
-            shape(g, s, x, y);
-    }
 
-    public void shape(Graphics g, Shape45 s) {
-        shape(g, s, 0, 0);
-    }
-    
-    public void shape(Graphics g, Shape45 s, int x, int y) {
-        // draw outline
-        abstractShape(g, s, x, y);
-        // draw sub-shapes
-        for (int i = 0; i < s.getNumSubShapes(); i++) {
-            shape(g, s.getSubShape(i), x, y);
-        }
-    }
-
-    public void triangles(Graphics g, ShapeGroup shape, int x, int y) {
-        Iterator<Triangle> iter = shape.triangleIterator();
-        while (iter.hasNext())
-            abstractShape(g, iter.next(), x, y);
-    }
-
-    public void abstractShape(Graphics g, AbstractShape shape, int x, int y) {
-        Pt2D lastVertex = null;
-        for (Pt2D vertex : shape) {
-            if (lastVertex != null) {
-                Pt2D v1 = lastVertex.transpose(x, y);
-                Pt2D v2 = vertex.transpose(x, y);
-                if (!v1.equals(v2))
-                    arrow(g, v1, v2);
-            }
-            lastVertex = vertex;
-        }
-        arrow(g, lastVertex.transpose(x, y), shape.getVertex(0).transpose(x, y));
-    }
+    /*------------------------- SIMPLE SHAPES --------------------------*/
 
     public void line(Graphics g, Line l) {
         line(g, l.start(), l.end(), 0, 0);
@@ -169,6 +95,18 @@ public class Gfx {
     public void rect(Graphics g, int x, int y, int sizeX, int sizeY) {
         g.drawRect(getX(x), getY(y + sizeY), sizeX * scaling, sizeY * scaling);
     }
+
+    public void fillRect(Graphics g, int x, int y, int sizeX, int sizeY) {
+        g.fillRect(getX(x), getY(y + sizeY), sizeX * scaling, sizeY * scaling);
+    }
+
+    public void box(Graphics g, Box2D b) {
+        rect(g, b.lowX, b.lowY, b.sizeX, b.sizeY);
+    }
+    
+    public void fillBox(Graphics g, Box2D b) {
+        fillRect(g, b.lowX, b.lowY, b.sizeX, b.sizeY);
+    }
     
     public void grid(Graphics g, int x, int y) {
         grid(g, 0, 0, x, y);
@@ -181,7 +119,89 @@ public class Gfx {
             line(g, x1, i, x2, i);
     }
 
+    public void crosshairs(Graphics g, Pt2Df p, int size) {
+        crosshairs(g, p.x(), p.y(), size);
+    }
+    
+    public void crosshairs(Graphics g, float x, float y, int size) {
+        int half = size / 2;
+        g.drawLine(getX(x) - half, getY(y),        getX(x) + half, getY(y));
+        g.drawLine(getX(x),        getY(y) - half, getX(x),        getY(y) + half);
+    }
+    
+    public void crosshairs(Graphics g, int x, int y, int size) {
+        int half = size / 2;
+        g.drawLine(getX(x) - half, getY(y),        getX(x) + half, getY(y));
+        g.drawLine(getX(x),        getY(y) - half, getX(x),        getY(y) + half);
+    }
 
+
+
+    /*------------------------- COMPLEX SHAPES -------------------------*/
+
+    public void shape(Graphics g, ShapeGroup shape) {
+        shape(g, shape, 0, 0);
+    }
+    
+    public void shape(Graphics g, ShapeGroup shape, int x, int y) {
+        for (Shape45 s : shape)
+            shape(g, s, x, y);
+    }
+
+    public void shape(Graphics g, Shape45 s) {
+        shape(g, s, 0, 0);
+    }
+    
+    public void shape(Graphics g, Shape45 s, int x, int y) {
+        // draw outline
+        abstractShape(g, s, x, y);
+        // draw sub-shapes
+        for (int i = 0; i < s.getNumSubShapes(); i++) {
+            shape(g, s.getSubShape(i), x, y);
+        }
+    }
+
+    public void abstractShape(Graphics g, AbstractShape shape, int x, int y) {
+        Pt2D lastVertex = null;
+        for (Pt2D vertex : shape) {
+            if (lastVertex != null) {
+                Pt2D v1 = lastVertex.transpose(x, y);
+                Pt2D v2 = vertex.transpose(x, y);
+                if (!v1.equals(v2))
+                    arrow(g, v1, v2);
+            }
+            lastVertex = vertex;
+        }
+        arrow(g, lastVertex.transpose(x, y), shape.getVertex(0).transpose(x, y));
+    }
+
+    public void shapeNestedDepthFade(Graphics g, ShapeGroup sg, Color c) {
+        for (Shape45 s : sg)
+            shapeNestedDepthFade(g, s, c);
+    }
+    
+    public void shapeNestedDepthFade(Graphics g, Shape45 s, Color c) {
+
+        // paint outline
+        g.setColor(c);
+        abstractShape(g, s, 0, 0);
+
+        // get color for sub-shapes
+        int depth = s.getNestedDepth();
+        Color subColor = Gfx.relativeBrightness(c, 1.0 - (1.0 / depth));
+
+        // paint sub-shapes
+        for (Shape45 sub : s.getSubShapes())
+            shapeNestedDepthFade(g, sub, subColor);
+    }
+    
+    public void triangles(Graphics g, ShapeGroup shape, int x, int y) {
+        Iterator<Triangle> iter = shape.triangleIterator();
+        while (iter.hasNext())
+            abstractShape(g, iter.next(), x, y);
+    }
+
+    
 
     /*----------------------------- ANGLES -----------------------------*/
 

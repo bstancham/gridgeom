@@ -48,7 +48,7 @@ public class DisplayShapesMode extends CanvasMode {
         getKeys().add('s', () -> "sub-shape editing mode " + KbdMode.boolStr(subShapeMode),
                       () -> switchToSubShapeMode());
 
-        getKeys().add('r', "reset shape",
+        getKeys().add('R', "reset shape",
                       () -> {
                           slot().wrapper().reset();
                           softUpdate();
@@ -114,8 +114,14 @@ public class DisplayShapesMode extends CanvasMode {
         
         subShapeKeys.add('a', "add subshape", () -> addSubShape());
 
+        subShapeKeys.add('A', "add subshape at same level",
+                         () -> addSubShapeAtSameLevel());
+
         subShapeKeys.add('c', "add containing box",
                          () -> slot().wrapper().addContainingBox());
+
+        subShapeKeys.add('w', "reverse winding (sub-shape)",
+                         () -> slot().wrapper().reverseSubShapeWinding());
 
     }
 
@@ -155,6 +161,12 @@ public class DisplayShapesMode extends CanvasMode {
     @Override
     public void paint(Graphics g) {
         
+        if (vertexMode) {
+            Shape45 sub = slot().wrapper().getShapeForVertexIndex();
+            g.setColor(Color.DARK_GRAY);
+            gfx().fillBox(g, sub.getBoundingBox());
+        }
+
         if (showGrid)
             getCanvas().paintGrid(g);
 
@@ -295,6 +307,9 @@ public class DisplayShapesMode extends CanvasMode {
         subShapeMode = true;
         softUpdate();
     }
+
+
+    
     
 
 
@@ -313,8 +328,8 @@ public class DisplayShapesMode extends CanvasMode {
     private void nextVertex()     { incrVertexIndex(1); }
 
     private void deleteVertex() {
-        slot().wrapper().deleteCurrentVertex();
-        previousVertex();
+        if (slot().wrapper().deleteCurrentVertex())
+            previousVertex();
     }
     
     private void addVertex() {
@@ -341,6 +356,11 @@ public class DisplayShapesMode extends CanvasMode {
     
     private void addSubShape() {
         slot().wrapper().addSubShapeOfCurrent();
+        nextSubShape();
+    }
+
+    private void addSubShapeAtSameLevel() {
+        slot().wrapper().addSubShapeAtCurrentLevel();
         nextSubShape();
     }
 

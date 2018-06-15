@@ -131,6 +131,25 @@ public class Shape45 extends AbstractShape {
         return null;
     }
 
+    public Shape45 getSubShapeForVertexIndex(int index) {
+
+        // is vertex index in outline?
+        if (index < getNumVertices()) {
+            return this;
+        }
+
+        // 
+        index -= getNumVertices();
+        for (int i = 0; i < subShapes.length; i++) {
+            if (index < subShapes[i].getTotalNumVertices())
+                return subShapes[i].getSubShapeForVertexIndex(index);
+            index -= subShapes[i].getTotalNumVertices();
+        }
+        
+        // index is out of range
+        return null;
+    }    
+    
     public boolean containsVertex(Pt2D v) {
         for (Pt2D vv : this)
             if (v.equals(vv))
@@ -185,6 +204,13 @@ public class Shape45 extends AbstractShape {
      * @return True, if shape is valid. False otherwise.
      */
     public boolean isValid() {
+    //     return isValid(null);
+    // }
+    
+    // public boolean isValid(Shape45 parent) {
+
+        // OUTLINE
+        
         // OUTLINE: AT LEAST THREE VERTICES
         if (getNumVertices() < 3) return false;
         // OUTLINE: ALL ANGLES MUST BE DIVISIBLE BY 45 DEGREES
@@ -195,6 +221,16 @@ public class Shape45 extends AbstractShape {
         if (getNumDuplicateVertices() != 0) return false;
         // OUTLINE: NO INTERSECTING EDGES
         if (getNumEdgeIntersections() !=0) return false;
+
+
+        
+        // PARENT SHAPE
+
+        // fit inside parent shape
+
+        
+
+        // SUB-SHAPES
 
         // SUB-SHAPE: ALL EDGES MUST BE INSIDE OUTLINE
 
@@ -373,8 +409,26 @@ public class Shape45 extends AbstractShape {
         Shape45[] newSubs = new Shape45[subShapes.length];
         for (int i = 0; i < subShapes.length; i++)
             newSubs[i] = subShapes[i].reverseWinding();
-        Pt2D[] newVerts = reverseVertices();
-        return new Shape45(newSubs, newVerts);
+        return new Shape45(newSubs, reverseVertices());
+    }
+
+    public Shape45 reverseSubShapeWinding(int index) {
+
+        if (index == 0)
+            return reverseWinding();
+
+        index--;
+        Shape45[] newSubs = new Shape45[subShapes.length];
+        for (int i = 0; i < subShapes.length; i++) {
+            if (index >= 0 &&
+                index < subShapes[i].getNumShapesRecursive()) {
+                newSubs[i] = subShapes[i].reverseSubShapeWinding(index);
+            } else {
+                newSubs[i] = subShapes[i];
+            }
+        }
+
+        return new Shape45(newSubs, copyVertices());
     }
 
     /**

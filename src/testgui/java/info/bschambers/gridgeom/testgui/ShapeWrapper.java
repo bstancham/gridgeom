@@ -119,8 +119,15 @@ public class ShapeWrapper {
         return modShape.getVertex(vertexIndex).transpose(xPos, yPos);
     }
 
-    public void deleteCurrentVertex() {
-        modShape = modShape.deleteVertex(vertexIndex);
+    public boolean deleteCurrentVertex() {
+        Shape45 sub = modShape.getShapeForVertexIndex(vertexIndex);
+        if (sub.getNumVertices() > 3) {
+            modShape = modShape.deleteVertex(vertexIndex);
+            return true;
+        } else {
+            System.out.println("Can't delete vertex - shape must have at least three vertices!");
+            return false;
+        }
     }
 
     public void addVertexAfterCurrent() {
@@ -146,6 +153,10 @@ public class ShapeWrapper {
         return modShape.getShapeRecursive(subShapeIndex).shift(xPos, yPos);
     }
 
+    public Shape45 getShapeForVertexIndex() {
+        return modShape.getShapeForVertexIndex(vertexIndex).shift(xPos, yPos);
+    }
+
     /**
      * <p>Shift current sub-shape by specified number of units in x/y
      * direction.</p>
@@ -162,20 +173,30 @@ public class ShapeWrapper {
      * <p>Adds a new sub-shape, as a sub-shape of the current sub-shape.</p>
      */
     public void addSubShapeOfCurrent() {
+        modShape = modShape.addSubShape(subShapeIndex,
+                                        newSubShape());
+    }
+
+    public void addSubShapeAtCurrentLevel() {
+        modShape = modShape.addSubShapeAtSameLevel(subShapeIndex,
+                                                   newSubShape());
+    }
+
+    public void addContainingBox() {
+        modShape = modShape.addContainingBox();
+    }
+
+    private Shape45 newSubShape() {
         Shape45 sub = getSubShape();
         Shape45 newSub = new Shape45(new Pt2D(0, 0),
                                      new Pt2D(0, 1),
                                      new Pt2D(1, 0));
         newSub.shift(sub.getCenterX(), sub.getCenterY());
-        modShape = modShape.addSubShape(subShapeIndex, newSub);
+        return newSub;
     }
 
-    // private void addSubShapeAtCurrentLevel() {
-    //     modShape = modShape.deleteSubShape(subShapeIndex);
-    // }
-
-    public void addContainingBox() {
-        modShape = modShape.addContainingBox();
+    public void reverseSubShapeWinding() {
+        modShape = modShape.reverseSubShapeWinding(subShapeIndex);
     }
 
     

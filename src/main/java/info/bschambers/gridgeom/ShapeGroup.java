@@ -106,10 +106,19 @@ public class ShapeGroup implements Iterable<Shape45> {
                 return shapes[i].getVertex(index - count);
             count += shapes[i].getTotalNumVertices();
         }
-
         // index is out of range
         return null;
     }
+
+    public Shape45 getShapeForVertexIndex(int index) {
+        for (int i = 0; i < shapes.length; i++) {
+            if (index < shapes[i].getTotalNumVertices())
+                return shapes[i].getSubShapeForVertexIndex(index);
+            index -= shapes[i].getTotalNumVertices();
+        }
+        // index is out of range
+        return null;
+    }    
 
     public int getNestedDepth() {
         return nestedDepth;
@@ -214,10 +223,24 @@ public class ShapeGroup implements Iterable<Shape45> {
     }
 
     public ShapeGroup reverseWinding() {
-        Shape45[] nShapes = new Shape45[shapes.length];
+        Shape45[] newShapes = new Shape45[shapes.length];
         for (int i = 0; i < shapes.length; i++)
-            nShapes[i] = shapes[i].reverseWinding();
-        return new ShapeGroup(nShapes);
+            newShapes[i] = shapes[i].reverseWinding();
+        return new ShapeGroup(newShapes);
+    }
+
+    public ShapeGroup reverseSubShapeWinding(int index) {
+        Shape45[] newShapes = new Shape45[shapes.length];
+        for (int i = 0; i < shapes.length; i++) {
+            if (index >= 0 &&
+                index < shapes[i].getNumShapesRecursive()) {
+                newShapes[i] = shapes[i].reverseSubShapeWinding(index);
+            } else {
+                newShapes[i] = shapes[i];
+            }
+            index -= shapes[i].getNumShapesRecursive();
+        }
+        return new ShapeGroup(newShapes);
     }
 
     public ShapeGroup addContainingBox() {
@@ -301,6 +324,70 @@ public class ShapeGroup implements Iterable<Shape45> {
         }
         
         return new ShapeGroup(newShapes);
+    }
+    
+    /**
+     * <p>Add a new sub-shape at the same level as the shape at {@code index}
+     * (recursive sub-shape indexing used). The new sub-shape will have the same
+     * parent-shape as the shape at {@code index}.</p>
+     */
+    public ShapeGroup addSubShapeAtSameLevel(int index, Shape45 newSub) {
+
+        // index out of range - return unmodified
+        if (index < 0 ||
+            index >= getNumShapesRecursive())
+            return this;
+
+        Shape45[] newShapes = new Shape45[shapes.length];
+        for (int i = 0; i < shapes.length; i++) {
+            if (index == 0) {
+                // shape is at top level - add it and exit early
+                Shape45[] topShapes = new Shape45[shapes.length + 1];
+                System.arraycopy(shapes, 0, topShapes, 0, shapes.length);
+                topShapes[shapes.length] = newSub;
+                return new ShapeGroup(topShapes);
+            } else if (index > 0 &&
+                       index < shapes[i].getNumShapesRecursive()) {
+                // delegate to shape
+                newShapes[i] = addSubShapeAtSameLevel(shapes[i],
+                                                      index,
+                                                      newSub);
+            } else {
+                newShapes[i] = shapes[i];
+            }
+            index -= shapes[i].getNumShapesRecursive();
+        }
+        
+        return new ShapeGroup(newShapes);
+    }
+    
+    private Shape45 addSubShapeAtSameLevel(Shape45 s, int index, Shape45 newSubShape) {
+
+        // index out of range - return unmodified
+        if (index < 1 ||
+            index >= s.getNumShapesRecursive())
+            return s;
+
+        index--;
+        Shape45[] subs = new Shape45[s.getNumSubShapes()];
+        for (int i = 0; i < s.getNumSubShapes(); i++) {
+            if (index == 0) {
+                // shape is at top level - add it and exit early
+                Shape45[] newSubs = new Shape45[s.getNumSubShapes() + 1];
+                // Shape45[] topShapes = new Shape45[shapes.length + 1];
+                System.arraycopy(s.getSubShapes(), 0, newSubs, 0, s.getNumSubShapes());
+                newSubs[s.getNumSubShapes()] = newSubShape;
+                return new Shape45(newSubs, s.copyVertices());
+            } else if (index > 0 &&
+                       index < s.getSubShape(i).getNumShapesRecursive()) {
+                // delegate to sub-shape
+                subs[i] = addSubShapeAtSameLevel(s.getSubShape(i), index, newSubShape);
+            } else {
+                subs[i] = s.getSubShape(i);
+            }
+            index -= s.getSubShape(i).getNumShapesRecursive();
+        }
+        return new Shape45(subs, s.copyVertices());
     }
     
     public ShapeGroup subtract(ShapeGroup sg) {
