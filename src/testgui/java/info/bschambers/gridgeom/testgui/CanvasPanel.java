@@ -216,7 +216,6 @@ public class CanvasPanel extends JPanel {
     }
 
     public boolean keyTyped(KeyEvent e) {
-
         // if mode doesn't overshadow this keybinding then handle it locally
         if (getCurrentMode().keyTyped(e))
             return true;
@@ -224,6 +223,14 @@ public class CanvasPanel extends JPanel {
             return keys.keyTyped(e);
     }
 
+    public boolean keyPressed(KeyEvent e) {
+        // if mode doesn't overshadow this keybinding then handle it locally
+        if (getCurrentMode().keyPressed(e))
+            return true;
+        else
+            return keys.keyPressed(e);
+    }
+    
     public void paintGrid(Graphics g) {
         g.setColor(Color.BLUE);
         gfx().grid(g, gridSizeX, gridSizeY);

@@ -25,15 +25,13 @@ public class DisplayShapesMode extends CanvasMode {
     private KbdMode subShapeKeys = new KbdMode();
 
     private TextBlock text = new TextBlock(500, 10);
+    private Color textCol = Color.GRAY;
 
     public void init(CanvasPanel canvas) {
         super.init(canvas);
         
-        getKeys().add('v', () -> "vertex editing mode " + KbdMode.boolStr(vertexMode),
-                      () -> setVertexMode(true));
-
-        getKeys().add('S', () -> "sub-shape editing mode " + KbdMode.boolStr(subShapeMode),
-                      () -> setVertexMode(true));
+        getKeys().add('g', () -> "show grid " + KbdMode.boolStr(showGrid),
+                      () -> toggleShowGrid());
 
         getKeys().add('m', () -> "show multiple " + KbdMode.boolStr(showMultiple),
                       () -> toggleShowMultiple());
@@ -46,6 +44,18 @@ public class DisplayShapesMode extends CanvasMode {
                             + slot().shape().getSourceCode()
                             + "\n\n... you can copy & paste this "
                             + "in to your program source code...\n"));
+
+        getKeys().add('v', () -> "vertex editing mode " + KbdMode.boolStr(vertexMode),
+                      () -> setVertexMode(true));
+
+        getKeys().add('S', () -> "sub-shape editing mode " + KbdMode.boolStr(subShapeMode),
+                      () -> setSubShapeMode(true));
+
+        getKeys().add('r', "reset shape",
+                      () -> {
+                          slot().wrapper().reset();
+                          softUpdate();
+                      });
 
         // TRANSFORMATIONS
 
@@ -64,15 +74,17 @@ public class DisplayShapesMode extends CanvasMode {
         getKeys().add('c', "add containing box",
                       () -> slot().wrapper().addContainingBox());
 
+
+
         // VERTEX EDITING
         
         vertexKeys.add('q', "quit vertex-edit mode", () -> setVertexMode(false));
 
-        vertexKeys.add('r', "reset shape",
-                      () -> {
-                          slot().wrapper().reset();
-                          softUpdate();
-                      });
+        vertexKeys.setCursorKeys("move vertex",
+                                 () -> slot().wrapper().shiftVertex(0, 1),
+                                 () -> slot().wrapper().shiftVertex(0, -1),
+                                 () -> slot().wrapper().shiftVertex(-1, 0),
+                                 () -> slot().wrapper().shiftVertex(1, 0));
 
         vertexKeys.add('[', ']',
                       () -> "prev/next vertex (" + (1 + slot().wrapper().vertexIndex()) +
@@ -84,13 +96,27 @@ public class DisplayShapesMode extends CanvasMode {
 
         vertexKeys.add('a', "add vertex (after)", () -> addVertex());
 
+
+
         // SUB-SHAPE EDITING
 
-        // subShapeKeys.add('q', "quit vertex-edit mode", () -> setSubShapeMode(false));
+        subShapeKeys.add('q', "quit sub-shape mode", () -> setSubShapeMode(false));
 
-        // subShapeKeys.add('d', "delete subshape", () -> deleteSubShape());
+        subShapeKeys.setCursorKeys("move sub-shape",
+                                   () -> slot().wrapper().shiftSubShape(0, 1),
+                                   () -> slot().wrapper().shiftSubShape(0, -1),
+                                   () -> slot().wrapper().shiftSubShape(-1, 0),
+                                   () -> slot().wrapper().shiftSubShape(1, 0));
         
-        // subShapeKeys.add('a', "add subshape", () -> addSubShape());
+        subShapeKeys.add('[', ']',
+                         () -> "prev/next sub-shape (" + (1 + slot().wrapper().subShapeIndex()) +
+                         " of " + slot().shape().getNumShapesRecursive() + ")",
+                         () -> previousSubShape(),
+                         () -> nextSubShape());
+
+        subShapeKeys.add('d', "delete subshape", () -> deleteSubShape());
+        
+        subShapeKeys.add('a', "add subshape", () -> addSubShape());
 
     }
 
@@ -107,7 +133,8 @@ public class DisplayShapesMode extends CanvasMode {
         
         // handle cursor movement
         if (vertexMode) {
-            setCurrentVertex(keyCursorX, keyCursorY);
+            setKeyCursorPos(slot().wrapper().getCanvasVertex());
+            // setCurrentVertex(keyCursorX, keyCursorY);
         } else {
             slot().wrapper().setPosition(keyCursorX, keyCursorY);
         }
@@ -140,89 +167,106 @@ public class DisplayShapesMode extends CanvasMode {
             paintSlot(g, slot());
         }
 
-        // if (showTriangulation) {
-        //     // gfx().triangles(g, currentShape(), offsetX, offsetY);
-        //     // gfx().triangles(g, currentShape2(), offset2X, offset2Y);
-        //     for (ShapeSlot ss : slots) {
-        //         gfx().triangles(g, ss.shape());
-        //     }
-        // }
+        if (subShapeMode) {
+            g.setColor(Color.WHITE);
+            gfx().shape(g, slot().wrapper().getSubShape());
+        }
 
         if (showDiagnostics) {
             // paint shape diagnostic info
 
             text.clear();
-            Color textCol = Color.GRAY;
             text.add(textCol, "NAME: " + slot().wrapper().name());
             text.addIfElse(slot().shape().isValid(),
                            Color.GREEN, "VALIDATION: PASSED",
                            Color.RED,   "VALIDATION: FAILED");
+            text.add(textCol, "nested depth: " + slot().shape().getNestedDepth());
 
             // EACH SUB-SHAPE
             int n = 1;
             for (Shape45 s : slot().shape()) {
-
+                
                 Color col = textCol;
                 text.addSeparator(col);
-                text.add(col, "OUTLINE " + n++);
+                // text.add(col, "OUTLINE " + n++);
 
-                // 45 DEGREE ANGLES
-                text.addIfElse(s.is45Compliant(),
-                               textCol, "45 DEGREE RULE: passed",
-                               Color.RED,  "45 DEGREE RULE: FAILED");
-            
-                // WINDING DIRECTION
-                String str = "WINDING: ";
-                if (s.isCCWWinding()) {
-                    str += "CCW";
-                } else if (s.isCWWinding()) {
-                    str += "CW";
-                    col = Color.PINK;
-                } else {
-                    str += "unknown";
-                    col = Color.RED;
-                }
-                text.add(col, str
-                         + " --- sum of angles: " + Math.toDegrees(s.getSumAngles())
-                         + " degrees (" + s.getSumAngles() + ")");
-
-                // DUPLICATE VERTICES
-                int numDuplicates = s.getNumDuplicateVertices();
-                text.addIfElse(numDuplicates == 0,
-                               textCol, "DUPLICATE VERTICES: " + numDuplicates,
-                               Color.RED,  "DUPLICATE VERTICES: " + numDuplicates);
-
-                // EDGE INTERSECTIONS
-                numDuplicates = s.getNumEdgeIntersections();
-                text.addIfElse(numDuplicates == 0,
-                               textCol, "EDGE INTERSECTIONS: " + numDuplicates,
-                               Color.RED,  "EDGE INTERSECTIONS: " + numDuplicates);
-
-                text.add(textCol, "NUM SUB-SHAPES: " + s.getNumSubShapes());
-
+                addDiagnosticText(text, s, "OUTLINE " + n++, "");
             }
-        
             text.paint(g);
-            
         }
 
         paintKbdCursor(g);
-
     }
 
     private void paintSlot(Graphics g, ShapeSlot ss) {
-        g.setColor(ss.wrapper().getColor());
-        gfx().shape(g, ss.shape());
+        if (subShapeMode) {
+            gfx().shapeNestedDepthFade(g, ss.shape(), ss.wrapper().getColor());
+        } else {
+            // standard view
+            g.setColor(ss.wrapper().getColor());
+            gfx().shape(g, ss.shape());
+        }
+    }
+
+    private void addDiagnosticText(TextBlock text, Shape45 s, String label, String pad) {
+        Color col = textCol;
+
+        // TITLE
+        text.add(col, pad + label);
+        
+        // 45 DEGREE ANGLES
+        text.addIfElse(s.is45Compliant(),
+                       textCol, pad + "45 DEGREE RULE: passed",
+                       Color.RED,  pad + "45 DEGREE RULE: FAILED");
+            
+        // WINDING DIRECTION
+        String str = "WINDING: ";
+        if (s.isCCWWinding()) {
+            str += "CCW";
+        } else if (s.isCWWinding()) {
+            str += "CW";
+            col = Color.PINK;
+        } else {
+            str += "unknown";
+            col = Color.RED;
+        }
+        text.add(col, pad + str
+                 + " --- sum of angles: " + Math.toDegrees(s.getSumAngles())
+                 + " degrees (" + s.getSumAngles() + ")");
+
+        // DUPLICATE VERTICES
+        int numDuplicates = s.getNumDuplicateVertices();
+        text.addIfElse(numDuplicates == 0,
+                       textCol, pad + "DUPLICATE VERTICES: " + numDuplicates,
+                       Color.RED, pad + "DUPLICATE VERTICES: " + numDuplicates);
+
+        // EDGE INTERSECTIONS
+        numDuplicates = s.getNumEdgeIntersections();
+        text.addIfElse(numDuplicates == 0,
+                       textCol, pad + "EDGE INTERSECTIONS: " + numDuplicates,
+                       Color.RED,  pad + "EDGE INTERSECTIONS: " + numDuplicates);
+
+        text.add(textCol, pad + "NUM SUB-SHAPES: " + s.getNumSubShapes());
+
+        int n = 1;
+        for (Shape45 sub : s.getSubShapes())
+            addDiagnosticText(text, sub, label + " SUB-SHAPE " + n++, pad + "  ");
     }
 
     @Override
     public KbdMode getKeys() {
         if (vertexMode)
             return vertexKeys;
+        else if (subShapeMode)
+            return subShapeKeys;
         else
             return super.getKeys();
     }
 
+    private void toggleShowGrid() {
+        showGrid = !showGrid;
+    }
+    
     private void toggleShowMultiple() {
         showMultiple = !showMultiple;
     }
@@ -260,6 +304,33 @@ public class DisplayShapesMode extends CanvasMode {
     private void addVertex() {
         slot().wrapper().addVertexAfterCurrent();
         nextVertex();
+    }
+
+
+
+    /*----------------------- SUB-SHAPE EDITING ------------------------*/
+
+    private void setSubShapeMode(boolean val) {
+        subShapeMode = val;
+        softUpdate();
+    }
+
+    private void incrSubShapeIndex(int amount) {
+        slot().wrapper().incrSubShapeIndex(amount);
+        softUpdate();
+    }
+    
+    private void previousSubShape() { incrSubShapeIndex(-1); }
+    private void nextSubShape()     { incrSubShapeIndex(1); }
+
+    private void deleteSubShape() {
+        slot().wrapper().deleteCurrentSubShape();
+        previousSubShape();
+    }
+    
+    private void addSubShape() {
+        slot().wrapper().addSubShapeOfCurrent();
+        nextSubShape();
     }
 
 }

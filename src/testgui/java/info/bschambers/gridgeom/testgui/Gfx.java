@@ -57,6 +57,26 @@ public class Gfx {
         g.drawLine(getX(x),        getY(y) - half, getX(x),        getY(y) + half);
     }
     
+    public void shapeNestedDepthFade(Graphics g, ShapeGroup sg, Color c) {
+        for (Shape45 s : sg)
+            shapeNestedDepthFade(g, s, c);
+    }
+    
+    public void shapeNestedDepthFade(Graphics g, Shape45 s, Color c) {
+
+        // paint outline
+        g.setColor(c);
+        abstractShape(g, s, 0, 0);
+
+        // get color for sub-shapes
+        int depth = s.getNestedDepth();
+        Color subColor = Gfx.relativeBrightness(c, 1.0 - (1.0 / depth));
+
+        // paint sub-shapes
+        for (Shape45 sub : s.getSubShapes())
+            shapeNestedDepthFade(g, sub, subColor);
+    }
+    
     public void shape(Graphics g, ShapeGroup shape) {
         shape(g, shape, 0, 0);
     }
@@ -66,6 +86,10 @@ public class Gfx {
             shape(g, s, x, y);
     }
 
+    public void shape(Graphics g, Shape45 s) {
+        shape(g, s, 0, 0);
+    }
+    
     public void shape(Graphics g, Shape45 s, int x, int y) {
         // draw outline
         abstractShape(g, s, x, y);
@@ -217,6 +241,45 @@ public class Gfx {
         Pt2D endPt = getPoint(ln.start());
         g.drawLine(endPt.x(), endPt.y(),
                    endPt.x(), endPt.y() - 70);
+    }
+
+
+    
+    /*----------------------------- COLOR ------------------------------*/
+    
+    /**
+     * @return A new random color generated using RGB values between 0
+     * and 255.
+     */
+    public static Color randomColor() {
+        return new Color((int) (Math.random() * 255),
+                         (int) (Math.random() * 255),
+                         (int) (Math.random() * 255));
+    }
+    
+    /**
+     * @param c The input color.
+     * @return A copy of the input color, with the RGB values inverted.
+     */
+    public static Color invertColor(Color c) {
+        return new Color(255 - c.getRed(),
+                         255 - c.getGreen(),
+                         255 - c.getBlue());
+    }
+
+    /**
+     * @param c The input color.
+     * @param amount The amount to adjust brightness by. Value of 1.0
+     * will be just the same as the input color. Value may be larger
+     * than 1.0.
+     * @return A new color based on the input color, but with relative
+     * brightness adjusted.
+     */ 
+    public static Color relativeBrightness(Color c, double amount) {
+        int rVal = (int)(c.getRed() * amount);   if (rVal > 255) { rVal = 255; }
+        int gVal = (int)(c.getGreen() * amount); if (gVal > 255) { gVal = 255; }
+        int bVal = (int)(c.getBlue() * amount);  if (bVal > 255) { bVal = 255; }
+        return new Color(rVal, gVal, bVal);
     }
 
 }

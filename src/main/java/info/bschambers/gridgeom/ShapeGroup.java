@@ -22,8 +22,9 @@ public class ShapeGroup implements Iterable<Shape45> {
 
     private Shape45[] shapes;
     private Integer numVertices = null;
-    private Box2D boundingBox;
+    private Box2D boundingBox = null;
     private Triangle[] triangles = null;
+    private int nestedDepth;
 
     public ShapeGroup(Shape45 s) {
         this(new Shape45[] { s });
@@ -31,6 +32,10 @@ public class ShapeGroup implements Iterable<Shape45> {
 
     public ShapeGroup(Shape45 ... shapes) {
         this.shapes = shapes;
+        nestedDepth = 0;
+        for (Shape45 s : shapes)
+            if (s.getNestedDepth() > nestedDepth)
+                nestedDepth = s.getNestedDepth();
     }
 
     public boolean isValid() {
@@ -47,6 +52,24 @@ public class ShapeGroup implements Iterable<Shape45> {
 
     public Shape45 getShape(int index) {
         return shapes[index];
+    }
+
+    public int getNumShapesRecursive() {
+        int count = 0;
+        for (Shape45 s : shapes)
+            count += s.getNumShapesRecursive();
+        return count;
+    }
+
+    public Shape45 getShapeRecursive(int index) {
+        int count = 0;
+        for (Shape45 s : shapes) {
+            if (index - count < s.getNumShapesRecursive()) {
+                return s.getSubShapeRecursive(index - count);
+            }
+            count +=s.getNumShapesRecursive();
+        }
+        return null;
     }
 
     /**
@@ -87,6 +110,10 @@ public class ShapeGroup implements Iterable<Shape45> {
         // index is out of range
         return null;
     }
+
+    public int getNestedDepth() {
+        return nestedDepth;
+    }
     
     public int getNumTriangles() {
         if (triangles == null)
@@ -123,10 +150,15 @@ public class ShapeGroup implements Iterable<Shape45> {
         return new ShapeGroup(newShapes);
     }
 
-    public ShapeGroup translate(int x, int y) {
+    public ShapeGroup shiftVertex(int index, int x, int y) {
+        Pt2D v = getVertex(index);
+        return setVertex(index, v.x() + x, v.y() + y);
+    }
+
+    public ShapeGroup shift(int x, int y) {
         Shape45[] nShapes = new Shape45[shapes.length];
         for (int i = 0; i < shapes.length; i++)
-            nShapes[i] = shapes[i].transpose(x, y);
+            nShapes[i] = shapes[i].shift(x, y);
         return new ShapeGroup(nShapes);
     }
 
@@ -205,6 +237,72 @@ public class ShapeGroup implements Iterable<Shape45> {
         return new ShapeGroup(container);
     }
 
+    public ShapeGroup shiftSubShape(int index, int x, int y) {
+        Shape45[] newShapes = new Shape45[shapes.length];
+        for (int i = 0; i < shapes.length; i++) {
+            if (index >= 0 &&
+                index < shapes[i].getNumShapesRecursive()) {
+                newShapes[i] = shapes[i].shiftSubShape(index, x, y);
+            } else {
+                newShapes[i] = shapes[i];
+            }
+            index -= shapes[i].getNumShapesRecursive();
+        }
+        return new ShapeGroup(newShapes);
+    }
+
+    public ShapeGroup deleteSubShape(int index) {
+
+        if (index < 0 ||
+            index >= getNumShapesRecursive())
+            return this;
+        
+        List<Shape45> newShapes = new ArrayList<>();
+        for (int i = 0; i < shapes.length; i++) {
+
+            // if index is zero, don't add this shape
+            if (index != 0) {
+
+                if (index < shapes[i].getNumShapesRecursive()) {
+                    newShapes.add(shapes[i].deleteSubShapeRecursive(index));
+                } else {
+                    newShapes.add(shapes[i]);
+                }
+                    
+            }
+
+            index -= shapes[i].getNumShapesRecursive();
+        }
+        
+        return new ShapeGroup(newShapes.toArray(new Shape45[newShapes.size()]));
+    }
+
+    /**
+     * <p>Add a new sub-shape to the shape at index (recursive sub-shape
+     * indexing used).</p>
+     */
+    public ShapeGroup addSubShape(int index, Shape45 newSub) {
+
+        // index out of range - return unmodified
+        if (index < 0 ||
+            index >= getNumShapesRecursive())
+            return this;
+
+        Shape45[] newShapes = new Shape45[shapes.length];
+
+        for (int i = 0; i < shapes.length; i++) {
+            if (index >= 0 &&
+                index < shapes[i].getNumShapesRecursive()) {
+                newShapes[i] = shapes[i].addSubShapeRecursive(index, newSub);
+            } else {
+                newShapes[i] = shapes[i];
+            }
+            index -= shapes[i].getNumShapesRecursive();
+        }
+        
+        return new ShapeGroup(newShapes);
+    }
+    
     public ShapeGroup subtract(ShapeGroup sg) {
         ShapeGroup output = this;
         for (Shape45 s : sg)
@@ -320,7 +418,7 @@ public class ShapeGroup implements Iterable<Shape45> {
     }
 
 
-
+    
     /*------------------------------ MISC ------------------------------*/
 
     /**

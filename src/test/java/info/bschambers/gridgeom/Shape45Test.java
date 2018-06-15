@@ -56,7 +56,7 @@ public class Shape45Test {
 
         // transpose rect2 so that only one shared corner vertex intersects
         
-        rect2 = rect2.transpose(1, 3);
+        rect2 = rect2.shift(1, 3);
         expected = new HashSet<>();
         expected.add(new Pt2Df(5, 6));
         assertEquals(expected, rect1.getIntersectionPoints(rect2));

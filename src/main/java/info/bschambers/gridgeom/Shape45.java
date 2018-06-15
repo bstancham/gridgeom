@@ -24,9 +24,11 @@ import java.util.Comparator;
  */
 public class Shape45 extends AbstractShape {
 
+    private Shape45[] subShapes;
     private Triangle[] triangles = null;
-    private Shape45[] subShapes = null;
+    private Box2D boundingBox = null;
     private Integer totalNumVertices = null;
+    private int nestedDepth;
 
     public Shape45(Pt2D ... vertices) {
         this(new Shape45[0], vertices);
@@ -39,6 +41,11 @@ public class Shape45 extends AbstractShape {
     public Shape45(Shape45[] subShapes, Pt2D ... vertices) {
         super(vertices);
         this.subShapes = subShapes;
+        int n = 0;
+        for (Shape45 sub : subShapes)
+            if (sub.getNestedDepth() > n)
+                n = sub.getNestedDepth();
+        nestedDepth = n + 1;
     }
 
     public int getNumSubShapes() {
@@ -47,6 +54,40 @@ public class Shape45 extends AbstractShape {
 
     public Shape45 getSubShape(int index) {
         return subShapes[index];
+    }
+
+    /**
+     * <p>TODO: unit test</p>
+     */
+    public Shape45[] getSubShapes() {
+        // make protective copy of sub-shapes before returning it
+        Shape45[] subs = new Shape45[subShapes.length];
+        System.arraycopy(subShapes, 0, subs, 0, subShapes.length);
+        return subs;
+    }
+
+    public int getNumShapesRecursive() {
+        int count = 1;
+        for (Shape45 s : subShapes)
+            count += s.getNumShapesRecursive();
+        return count;
+    }
+
+    public Shape45 getSubShapeRecursive(int index) {
+        // index 0 refers to the whole shape
+        if (index == 0)
+            return this;
+        // sub-shapes
+        index--;
+        for (Shape45 s : subShapes) {
+            if (index < s.getNumShapesRecursive()) {
+                return s.getSubShapeRecursive(index);
+            } else {
+                index -= s.getNumShapesRecursive();
+            }
+        }
+        // index out of range
+        return null;
     }
 
     /**
@@ -76,18 +117,16 @@ public class Shape45 extends AbstractShape {
      * @return vertex at index, or {@code null} if index is out of range.
      */
     public Pt2D getVertex(int index) {
-        
+        // index in outline
         if (index < getNumVertices())
             return super.getVertex(index);
-        
+        // index in sub-shape
         int count = getNumVertices();
-        
         for (int i = 0; i < subShapes.length; i++) {
             if (index - count < subShapes[i].getTotalNumVertices())
                 return subShapes[i].getVertex(index - count);
             count += subShapes[i].getTotalNumVertices();
         }
-
         // index is out of range
         return null;
     }
@@ -99,7 +138,41 @@ public class Shape45 extends AbstractShape {
         return false;
     }
     
+    public Box2D getBoundingBox() {
+        if (boundingBox == null)
+            makeBoundingBox();
+        return boundingBox;
+    }
 
+    public int getCenterX() {
+        if (boundingBox == null)
+            makeBoundingBox();
+        return boundingBox.centerX;
+    }
+
+    public int getCenterY() {
+        if (boundingBox == null)
+            makeBoundingBox();
+        return boundingBox.centerY;
+    }
+
+    public void makeBoundingBox() {
+        Pt2D v = getVertex(0);
+        int lowX  = v.x();
+        int highX = v.x();
+        int lowY  = v.y();
+        int highY = v.y();
+        for (int i = 1; i < getNumVertices(); i++) {
+            v = getVertex(i);
+            if (v.x() < lowX)  lowX  = v.x();
+            if (v.x() > highX) highX = v.x();
+            if (v.y() < lowY)  lowY  = v.y();
+            if (v.y() > highY) highY = v.y();
+        }
+        boundingBox = new Box2D(lowX, lowY, highX, highY);
+    }
+
+    
     
     /*--------------------------- DIAGNOSTIC ---------------------------*/
 
@@ -162,6 +235,10 @@ public class Shape45 extends AbstractShape {
         return true;
     }
 
+    public int getNestedDepth() {
+        return nestedDepth;
+    }
+
 
 
     /*------------------------- TRIANGULATION --------------------------*/
@@ -199,12 +276,97 @@ public class Shape45 extends AbstractShape {
      * @return A new {@code Shape45} which is an identical copy of this one but
      * shifted by {@code x/y} units.
      */
-    public Shape45 transpose(int x, int y) {
+    public Shape45 shift(int x, int y) {
         Shape45[] newSubs = new Shape45[subShapes.length];
         for (int i = 0; i < subShapes.length; i++)
-            newSubs[i] = subShapes[i].transpose(x, y);
+            newSubs[i] = subShapes[i].shift(x, y);
         Pt2D[] newVerts = transposeVertices(x, y);
         return new Shape45(newSubs, newVerts);
+    }
+
+    /**
+     * <p>Shift sub-shape at index by x/y units.</p>
+     */
+    public Shape45 shiftSubShape(int index, int x, int y) {
+        // index 0 refers to the whole shape
+        if (index == 0)
+            return shift(x, y);
+        // index in sub-shape
+        index--;
+        Shape45[] newSubs = new Shape45[subShapes.length];
+        for (int i = 0; i < subShapes.length; i++) {
+            if (index >= 0 &&
+                index < subShapes[i].getNumShapesRecursive()) {
+                newSubs[i] = subShapes[i].shiftSubShape(index, x, y);
+            } else {
+                newSubs[i] = subShapes[i];
+            }
+            index -= subShapes[i].getNumShapesRecursive();
+        }
+        return new Shape45(newSubs, copyVertices());
+    }
+
+    /**
+     * <p>WARNING: Returns {@code null} if index is zero. To be consistent with
+     * sub-shape indexing, zero refers to the whole shape, therefore deleting
+     * the sub-shape at index zero deletes the whole shape.</p>
+     */
+    public Shape45 deleteSubShapeRecursive(int index) {
+        // index 0 - delete whole shape!
+        if (index == 0)
+            return null;
+        // index out of bounds - delete nothing
+        if (index >= getNumShapesRecursive())
+            return this;
+        // subtract one - first sub-shape was the whole shape itself
+        index--;
+        List<Shape45> newSubs = new ArrayList<>();
+        for (int i = 0; i < subShapes.length; i++) {
+            // if index is zero, don't add this shape
+            if (index != 0) {
+                if (index < subShapes[i].getNumShapesRecursive()) {
+                    newSubs.add(subShapes[i].deleteSubShapeRecursive(index));
+                } else {
+                    newSubs.add(subShapes[i]);
+                }
+            }
+            index -= subShapes[i].getNumShapesRecursive();
+        }
+        return new Shape45(newSubs.toArray(new Shape45[newSubs.size()]),
+                           copyVertices());
+    }
+    
+    public Shape45 addSubShapeRecursive(int index, Shape45 newSubShape) {
+        // if index out of range, return without modifying
+        if (index < 0 ||
+            index >= getNumShapesRecursive())
+            return this;
+
+        // index 0 - add subshape to this and return
+        if (index == 0) {
+            Shape45[] newSubs = new Shape45[subShapes.length + 1];
+            // System.arraycopy(subShapes, 0, newSubs, 0, subShapes.length);
+            for (int i = 0; i < subShapes.length; i++) {
+                newSubs[i] = subShapes[i];
+            }
+            newSubs[subShapes.length] = newSubShape;
+            return new Shape45(newSubs, copyVertices());
+        }
+
+        // find index in sub-shapes
+        index--;
+        Shape45[] newSubs = new Shape45[subShapes.length];
+        for (int i = 0; i < subShapes.length; i++) {
+            if (index >= 0 &&
+                index < subShapes[i].getNumShapesRecursive()) {
+                newSubs[i] = subShapes[i].addSubShapeRecursive(index, newSubShape);
+            } else {
+                newSubs[i] = subShapes[i];
+            }
+            index -= subShapes[i].getNumShapesRecursive();
+        }
+
+        return new Shape45(newSubs, copyVertices());
     }
 
     public Shape45 reverseWinding() {
@@ -481,7 +643,7 @@ public class Shape45 extends AbstractShape {
         } else if (subShapes.length > 1) {
             sb.append("new Shape45[] {\n");
             for (Shape45 s : subShapes) {
-                sb.append(subShapes[0].getSourceCode() + ",\n");
+                sb.append(s.getSourceCode() + ",\n");
             }
             sb.append("},\n");
         }

@@ -27,6 +27,12 @@ public abstract class CanvasMode {
 
     public void init(CanvasPanel canvas) {
         this.canvas = canvas;
+        // set up default cursor key actions
+        keys.setCursorKeys("move",
+                           () -> keyCursorY++,
+                           () -> keyCursorY--,
+                           () -> keyCursorX--,
+                           () -> keyCursorX++);
     }
 
     protected CanvasPanel getCanvas() {
@@ -63,13 +69,8 @@ public abstract class CanvasMode {
     /**
      * <p>Handles cursor keys.</p>
      */
-    public void keyPressed(KeyEvent e) {
-        int code = e.getKeyCode();
-        // System.out.println("CanvasMode.keyPressed: code=" + code);
-        if (code == KeyEvent.VK_LEFT) keyCursorX--;
-        if (code == KeyEvent.VK_RIGHT) keyCursorX++;
-        if (code == KeyEvent.VK_DOWN) keyCursorY--;
-        if (code == KeyEvent.VK_UP) keyCursorY++;
+    public boolean keyPressed(KeyEvent e) {
+        return getKeys().keyPressed(e);
     }
 
     public List<KeyBinding> getKeyBindings() {

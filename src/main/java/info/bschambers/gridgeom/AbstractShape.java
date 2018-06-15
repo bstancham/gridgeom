@@ -40,11 +40,17 @@ public abstract class AbstractShape implements Iterable<Pt2D> {
         return edges;
     }
 
+    protected Pt2D[] copyVertices() {
+        Pt2D[] newVertices = new Pt2D[vertices.length];
+        System.arraycopy(vertices, 0, newVertices, 0, vertices.length);
+        return newVertices;
+    }
+
     protected Pt2D[] transposeVertices(int x, int y) {
-        Pt2D[] nVertices = new Pt2D[vertices.length];
+        Pt2D[] newVertices = new Pt2D[vertices.length];
         for (int i = 0; i < vertices.length; i++)
-            nVertices[i] = vertices[i].transpose(x, y);
-        return nVertices;
+            newVertices[i] = vertices[i].transpose(x, y);
+        return newVertices;
     }
 
     protected Pt2D[] reverseVertices() {

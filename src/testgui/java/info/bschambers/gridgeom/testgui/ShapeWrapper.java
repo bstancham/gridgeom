@@ -12,6 +12,7 @@ public class ShapeWrapper {
     private int xPos = 0;
     private int yPos = 0;
     private int vertexIndex = 0;
+    private int subShapeIndex = 0;
 
     public ShapeWrapper(String name, Shape45 shape) {
         this(name, new ShapeGroup(shape));
@@ -31,7 +32,7 @@ public class ShapeWrapper {
      * @return Position-adjusted shape.
      */
     public ShapeGroup shape() {
-        return modShape.translate(xPos, yPos);
+        return modShape.shift(xPos, yPos);
     }
 
     public void setColor(Color c) {
@@ -52,8 +53,6 @@ public class ShapeWrapper {
     public void setPosition(int x, int y) {
         xPos = x;
         yPos = y;
-        // xPos = x - modShape.centre().x();
-        // yPos = y - modShape.centre().y();
     }
 
     public int vertexIndex() { return vertexIndex; }
@@ -75,6 +74,10 @@ public class ShapeWrapper {
      */
     public void setVertex(int x, int y) {
         modShape = modShape.setVertex(vertexIndex, x - xPos, y - yPos);
+    }
+
+    public void shiftVertex(int x, int y) {
+        modShape = modShape.shiftVertex(vertexIndex, x, y);
     }
 
     public Pt2D getCanvasVertex() {
@@ -122,5 +125,45 @@ public class ShapeWrapper {
     public void addContainingBox() {
         modShape = modShape.addContainingBox();
     }
+
+    public int subShapeIndex() { return subShapeIndex; }
+
+    public void incrSubShapeIndex(int amount) {
+        subShapeIndex += amount;
+        // wrap index
+        if (subShapeIndex < 0)
+            subShapeIndex = shape().getNumShapesRecursive() - 1;
+        else if (subShapeIndex >= shape().getNumShapesRecursive())
+            subShapeIndex = 0;
+    }
+
+    public Shape45 getSubShape() {
+        return modShape.getShapeRecursive(subShapeIndex).shift(xPos, yPos);
+    }
+
+    /**
+     * <p>Shift current sub-shape by specified number of units in x/y
+     * direction.</p>
+     */
+    public void shiftSubShape(int x, int y) {
+        modShape = modShape.shiftSubShape(subShapeIndex, x, y);
+    }
+    
+    public void deleteCurrentSubShape() {
+        modShape = modShape.deleteSubShape(subShapeIndex);
+    }
+
+    public void addSubShapeOfCurrent() {
+        Shape45 sub = getSubShape();
+        Shape45 newSub = new Shape45(new Pt2D(0, 0),
+                                     new Pt2D(0, 1),
+                                     new Pt2D(1, 0));
+        newSub.shift(sub.getCenterX(), sub.getCenterY());
+        modShape = modShape.addSubShape(subShapeIndex, newSub);
+    }
+
+    // private void addSubShapeAtCurrentLevel() {
+    //     modShape = modShape.deleteSubShape(subShapeIndex);
+    // }
 
 }

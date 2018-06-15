@@ -121,7 +121,7 @@ public class TestFrame extends JFrame
         if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
             exit();
         
-        canvas.getCurrentMode().keyPressed(e);
+        boolean returnVal = canvas.keyPressed(e);
         canvas.update();
         repaint();
     }
