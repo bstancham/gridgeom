@@ -3,6 +3,9 @@ package info.bschambers.gridgeom.testgui;
 import java.awt.Color;
 import info.bschambers.gridgeom.*;
 
+/**
+ * <p>Encapsulates a {@link ShapeGroup} for interactive editing.</p>
+ */
 public class ShapeWrapper {
 
     private ShapeGroup originalShape;
@@ -23,16 +26,44 @@ public class ShapeWrapper {
         originalShape = shape;
         modShape = shape;
     }
-    
-    public String name() {
-        return name;
+
+    public ShapeWrapper copy() {
+        ShapeWrapper sw = new ShapeWrapper(name, originalShape);
+        sw.modShape = modShape;
+        sw.col = col;
+        sw.xPos = xPos;
+        sw.yPos = yPos;
+        return sw;
     }
+
+    public void reset() {
+        modShape = originalShape;
+    }
+
+    /**
+     * <p>Prints source code for shape to standard out. This can be copied and
+     * pasted directly into a program.</p>
+     */
+    public void printSourceCode() {
+        System.out.println("\nnew ShapeWrapper(\"" + name() + "\",\n"
+                           + shape().getSourceCode() + ")"
+                           + "\n\n... you can copy & paste this "
+                           + "in to your program source code...\n");
+    }
+    
+
+
+    /*---------------------- GETTERS AND SETTERS -----------------------*/
 
     /**
      * @return Position-adjusted shape.
      */
     public ShapeGroup shape() {
         return modShape.shift(xPos, yPos);
+    }
+
+    public String name() {
+        return name;
     }
 
     public void setColor(Color c) {
@@ -54,6 +85,10 @@ public class ShapeWrapper {
         xPos = x;
         yPos = y;
     }
+
+
+    
+    /*----------------------------- VERTEX -----------------------------*/
 
     public int vertexIndex() { return vertexIndex; }
 
@@ -83,19 +118,6 @@ public class ShapeWrapper {
     public Pt2D getCanvasVertex() {
         return modShape.getVertex(vertexIndex).transpose(xPos, yPos);
     }
-    
-    public void reset() {
-        modShape = originalShape;
-    }
-    
-    public ShapeWrapper copy() {
-        ShapeWrapper sw = new ShapeWrapper(name, originalShape);
-        sw.modShape = modShape;
-        sw.col = col;
-        sw.xPos = xPos;
-        sw.yPos = yPos;
-        return sw;
-    }
 
     public void deleteCurrentVertex() {
         modShape = modShape.deleteVertex(vertexIndex);
@@ -105,26 +127,9 @@ public class ShapeWrapper {
         modShape = modShape.addVertexAfter(vertexIndex);
     }
 
-    public void reflectX() {
-        modShape = modShape.reflectX();
-    }
 
-    public void reflectY() {
-        modShape = modShape.reflectY();
-    }
-
-    public void rotate90() {
-        modShape = modShape.rotate90(modShape.getCenterX(),
-                                     modShape.getCenterY());
-    }
-
-    public void reverseWinding() {
-        modShape = modShape.reverseWinding();
-    }
-
-    public void addContainingBox() {
-        modShape = modShape.addContainingBox();
-    }
+    
+    /*--------------------------- SUB-SHAPE ----------------------------*/
 
     public int subShapeIndex() { return subShapeIndex; }
 
@@ -153,6 +158,9 @@ public class ShapeWrapper {
         modShape = modShape.deleteSubShape(subShapeIndex);
     }
 
+    /**
+     * <p>Adds a new sub-shape, as a sub-shape of the current sub-shape.</p>
+     */
     public void addSubShapeOfCurrent() {
         Shape45 sub = getSubShape();
         Shape45 newSub = new Shape45(new Pt2D(0, 0),
@@ -165,5 +173,30 @@ public class ShapeWrapper {
     // private void addSubShapeAtCurrentLevel() {
     //     modShape = modShape.deleteSubShape(subShapeIndex);
     // }
+
+    public void addContainingBox() {
+        modShape = modShape.addContainingBox();
+    }
+
+    
+
+    /*------------------------- TRANSFORMATION -------------------------*/
+
+    public void reverseWinding() {
+        modShape = modShape.reverseWinding();
+    }
+
+    public void reflectX() {
+        modShape = modShape.reflectX();
+    }
+
+    public void reflectY() {
+        modShape = modShape.reflectY();
+    }
+
+    public void rotate90() {
+        modShape = modShape.rotate90(modShape.getCenterX(),
+                                     modShape.getCenterY());
+    }
 
 }

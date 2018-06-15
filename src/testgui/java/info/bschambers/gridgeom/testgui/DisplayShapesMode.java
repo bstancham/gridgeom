@@ -40,16 +40,13 @@ public class DisplayShapesMode extends CanvasMode {
                       () -> toggleShowDiagnostics());
 
         getKeys().add('P', "print source code",
-                      () -> System.out.println("\n"
-                            + slot().shape().getSourceCode()
-                            + "\n\n... you can copy & paste this "
-                            + "in to your program source code...\n"));
+                      () -> slot().wrapper().printSourceCode());
 
         getKeys().add('v', () -> "vertex editing mode " + KbdMode.boolStr(vertexMode),
-                      () -> setVertexMode(true));
+                      () -> switchToVertexMode());
 
-        getKeys().add('S', () -> "sub-shape editing mode " + KbdMode.boolStr(subShapeMode),
-                      () -> setSubShapeMode(true));
+        getKeys().add('s', () -> "sub-shape editing mode " + KbdMode.boolStr(subShapeMode),
+                      () -> switchToSubShapeMode());
 
         getKeys().add('r', "reset shape",
                       () -> {
@@ -71,14 +68,12 @@ public class DisplayShapesMode extends CanvasMode {
         getKeys().add('w', "reverse winding",
                       () -> slot().wrapper().reverseWinding());
 
-        getKeys().add('c', "add containing box",
-                      () -> slot().wrapper().addContainingBox());
-
-
-
         // VERTEX EDITING
         
-        vertexKeys.add('q', "quit vertex-edit mode", () -> setVertexMode(false));
+        vertexKeys.add('s', () -> "sub-shape editing mode " + KbdMode.boolStr(subShapeMode),
+                       () -> switchToSubShapeMode());
+
+        vertexKeys.add('q', "quit vertex-edit mode", () -> switchToBaseMode());
 
         vertexKeys.setCursorKeys("move vertex",
                                  () -> slot().wrapper().shiftVertex(0, 1),
@@ -96,11 +91,12 @@ public class DisplayShapesMode extends CanvasMode {
 
         vertexKeys.add('a', "add vertex (after)", () -> addVertex());
 
-
-
         // SUB-SHAPE EDITING
 
-        subShapeKeys.add('q', "quit sub-shape mode", () -> setSubShapeMode(false));
+        subShapeKeys.add('v', () -> "vertex editing mode " + KbdMode.boolStr(vertexMode),
+                         () -> switchToVertexMode());
+
+        subShapeKeys.add('q', "quit sub-shape mode", () -> switchToBaseMode());
 
         subShapeKeys.setCursorKeys("move sub-shape",
                                    () -> slot().wrapper().shiftSubShape(0, 1),
@@ -117,6 +113,9 @@ public class DisplayShapesMode extends CanvasMode {
         subShapeKeys.add('d', "delete subshape", () -> deleteSubShape());
         
         subShapeKeys.add('a', "add subshape", () -> addSubShape());
+
+        subShapeKeys.add('c', "add containing box",
+                         () -> slot().wrapper().addContainingBox());
 
     }
 
@@ -275,14 +274,31 @@ public class DisplayShapesMode extends CanvasMode {
         showDiagnostics = !showDiagnostics;
     }
 
+    
+
+    /*------------------------- MODE SWITCHING -------------------------*/
+
+    private void switchToBaseMode() {
+        vertexMode = false;
+        subShapeMode = false;
+        softUpdate();
+    }
+    
+    private void switchToVertexMode() {
+        vertexMode = true;
+        subShapeMode = false;
+        softUpdate();
+    }
+    
+    private void switchToSubShapeMode() {
+        vertexMode = false;
+        subShapeMode = true;
+        softUpdate();
+    }
+    
 
 
     /*------------------------- VERTEX EDITING -------------------------*/
-
-    private void setVertexMode(boolean val) {
-        vertexMode = val;
-        softUpdate();
-    }
 
     protected void setCurrentVertex(int x, int y) {
         slot().wrapper().setVertex(x, y);        
@@ -309,11 +325,6 @@ public class DisplayShapesMode extends CanvasMode {
 
 
     /*----------------------- SUB-SHAPE EDITING ------------------------*/
-
-    private void setSubShapeMode(boolean val) {
-        subShapeMode = val;
-        softUpdate();
-    }
 
     private void incrSubShapeIndex(int amount) {
         slot().wrapper().incrSubShapeIndex(amount);

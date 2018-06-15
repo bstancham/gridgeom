@@ -67,7 +67,7 @@ public class CanvasPanel extends JPanel {
                  () -> nextShape());
     
         if (numSlots > 1)
-            keys.add('s',
+            keys.add('S',
                      () -> "switch shape-slot (" + (shapeSlotIndex + 1) +
                      " of " + shapeSlots.length + ")",
                      () -> switchShapeSlot());
