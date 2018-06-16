@@ -15,8 +15,8 @@ import java.util.HashSet;
  * <li>all angles must be divisible by 45 degrees</li>
  * </ul>
  *
- * <p>Computer-intensive work i.e. triangulation is not done until required, and
- * is then memoised for quick repeat-access.</p>
+ * <p>Computation-intensive work i.e. triangulation is not done until required,
+ * and is then memoised for quick repeat-access.</p>
  */
 public class ShapeGroup implements Iterable<Shape45> {
 
@@ -25,6 +25,7 @@ public class ShapeGroup implements Iterable<Shape45> {
     private Box2D boundingBox = null;
     private Triangle[] triangles = null;
     private int nestedDepth;
+    private Boolean valid = null;
 
     public ShapeGroup(Shape45 s) {
         this(new Shape45[] { s });
@@ -37,13 +38,15 @@ public class ShapeGroup implements Iterable<Shape45> {
             if (s.getNestedDepth() > nestedDepth)
                 nestedDepth = s.getNestedDepth();
     }
-
+    
     public boolean isValid() {
-        boolean result = true;
-        for (Shape45 s : shapes)
-            if (!s.isValid())
-                result = false;
-        return result;
+        if (valid == null) {
+            valid = true;
+            for (Shape45 s : shapes)
+                if (!s.isValid())
+                    valid = false;
+        }
+        return valid;
     }
 
     public int getNumShapes() {

@@ -6,6 +6,8 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.Collections;
 import java.util.Comparator;
+import static info.bschambers.gridgeom.Geom2D.WindingDir;
+
 
 /**
  * <p>NOTE: A shape with non-45 angles may be constructed! Use {@link isValid}
@@ -204,39 +206,62 @@ public class Shape45 extends AbstractShape {
      * @return True, if shape is valid. False otherwise.
      */
     public boolean isValid() {
-    //     return isValid(null);
-    // }
+        return isValid(WindingDir.CW);
+    }
     
-    // public boolean isValid(Shape45 parent) {
+    public boolean isValid(WindingDir parentWinding) {
 
         // OUTLINE
         
         // OUTLINE: AT LEAST THREE VERTICES
         if (getNumVertices() < 3) return false;
+
         // OUTLINE: ALL ANGLES MUST BE DIVISIBLE BY 45 DEGREES
         if (!is45Compliant()) return false;
+        
         // OUTLINE: WINDING DIRECTION MUST BE CCW
-        if (!isCCWWinding()) return false;
+        // if (!isCCWWinding()) return false;
+        if (!isChildWindingFor(parentWinding)) return false;
+        
         // OUTLINE: NO DUPLICATE VERTICES
         if (getNumDuplicateVertices() != 0) return false;
+        
         // OUTLINE: NO INTERSECTING EDGES
         if (getNumEdgeIntersections() !=0) return false;
 
 
         
-        // PARENT SHAPE
-
-        // fit inside parent shape
-
-        
-
         // SUB-SHAPES
 
-        // SUB-SHAPE: ALL EDGES MUST BE INSIDE OUTLINE
+        for (Shape45 sub : subShapes) {
 
-        // SUB-SHAPE MAY NOT INTERSECT
+            // SUB-SHAPE: ALL EDGES MUST BE INSIDE OUTLINE
+
+            // SUB-SHAPES MAY NOT INTERSECT ONEANOTHER
+
+            
+
+            if (!sub.isValid(getWindingDir())) return false;
+
+        }
         
         return true;
+    }
+
+    public WindingDir getWindingDir() {
+        if (isCWWinding())
+            return WindingDir.CW;
+        if (isCCWWinding())
+            return WindingDir.CCW;
+        return WindingDir.INDETERMINATE;
+    }
+
+    private boolean isChildWindingFor(WindingDir parentWinding) {
+        if (parentWinding == WindingDir.CW && getWindingDir() == WindingDir.CCW)
+            return true;
+        if (parentWinding == WindingDir.CCW && getWindingDir() == WindingDir.CW)
+            return true;
+        return false;
     }
 
     /**
@@ -413,19 +438,21 @@ public class Shape45 extends AbstractShape {
     }
 
     public Shape45 reverseSubShapeWinding(int index) {
-
+        
         if (index == 0)
             return reverseWinding();
 
         index--;
         Shape45[] newSubs = new Shape45[subShapes.length];
         for (int i = 0; i < subShapes.length; i++) {
+
             if (index >= 0 &&
                 index < subShapes[i].getNumShapesRecursive()) {
                 newSubs[i] = subShapes[i].reverseSubShapeWinding(index);
             } else {
                 newSubs[i] = subShapes[i];
             }
+            index -= subShapes[i].getNumShapesRecursive();
         }
 
         return new Shape45(newSubs, copyVertices());

@@ -7,6 +7,10 @@ public class Geom2D {
 
     private Geom2D() {}
 
+    public enum WindingDir {
+        CW, CCW, INDETERMINATE
+    };
+
     public static final double EIGHTH_TURN = Math.PI * 0.25;
     public static final double QUARTER_TURN = Math.PI * 0.5;
     public static final double THREE_EIGHTH_TURN = Math.PI * 0.75;

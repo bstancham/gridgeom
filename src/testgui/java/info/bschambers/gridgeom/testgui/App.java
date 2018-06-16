@@ -615,8 +615,33 @@ public class App {
                                                          new Pt2D(2, 4),
                                                          new Pt2D(0, 4),
                                                          new Pt2D(0, 3),
-                                                         new Pt2D(2, 3)))
-                       
+                                                         new Pt2D(2, 3))),
+
+                            new ShapeWrapper("multiple (top-level shapes intersect)",
+                                             new ShapeGroup(new Shape45(new Pt2D(6, 4),
+                                                                        new Pt2D(9, 4),
+                                                                        new Pt2D(6, 7)),
+                                                            new Shape45(new Pt2D(9, 5),
+                                                                        new Pt2D(9, 10),
+                                                                        new Pt2D(7, 10),
+                                                                        new Pt2D(7, 5)))),
+                            
+                            new ShapeWrapper("sub-shapes intersect",
+                                             new ShapeGroup(new Shape45(new Shape45[] {
+                                                         new Shape45(new Pt2D(7, 5),
+                                                                     new Pt2D(7, 7),
+                                                                     new Pt2D(10, 7),
+                                                                     new Pt2D(10, 5)),
+                                                         new Shape45(new Pt2D(9, 4),
+                                                                     new Pt2D(9, 8),
+                                                                     new Pt2D(11, 8),
+                                                                     new Pt2D(11, 4)),
+                                                     },
+                                                     new Pt2D(6, 3),
+                                                     new Pt2D(12, 3),
+                                                     new Pt2D(12, 9),
+                                                     new Pt2D(6, 9))))
+                            
                             );
     }
     
