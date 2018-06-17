@@ -38,13 +38,34 @@ public class ShapeGroup implements Iterable<Shape45> {
             if (s.getNestedDepth() > nestedDepth)
                 nestedDepth = s.getNestedDepth();
     }
-    
+
+    /**
+     * <p>WARNING: currently incomplete.</p>
+     *
+     * <p>TODO:</p>
+     * <ul>
+     * <li>test for illegally nested shapes</li>
+     * <li>test for intersection without edge-intersection</li>
+     * </ul>
+     */
     public boolean isValid() {
         if (valid == null) {
+            
             valid = true;
             for (Shape45 s : shapes)
                 if (!s.isValid())
                     valid = false;
+
+            // shapes must not intersect
+            for (Shape45 s1 : shapes)
+                for (Shape45 s2 : shapes)
+                    if (s1 != s2)
+                        if (s1.intersectsIgnoreSharedVertices(s2))
+                            valid = false;
+
+            // top-level shapes must not be illegally nested
+            // TODO...
+
         }
         return valid;
     }
@@ -121,6 +142,22 @@ public class ShapeGroup implements Iterable<Shape45> {
         }
         // index is out of range
         return null;
+    }
+
+    /**
+     * @return The index of sub-shape which contains the vertex at {@code
+     * index}, or {@code -1} if {@code index} is out of range.
+     */
+    public int getSubShapeIndexForVertexIndex(int index) {
+        int count = 0;
+        for (int i = 0; i < shapes.length; i++) {
+            if (index < shapes[i].getTotalNumVertices())
+                return count + shapes[i].getSubShapeIndexForVertexIndex(index);
+            index -= shapes[i].getTotalNumVertices();
+            count += shapes[i].getNumShapesRecursive();
+        }
+        // index is out of range
+        return -1;
     }    
 
     public int getNestedDepth() {
@@ -242,6 +279,21 @@ public class ShapeGroup implements Iterable<Shape45> {
                 newShapes[i] = shapes[i];
             }
             index -= shapes[i].getNumShapesRecursive();
+        }
+        return new ShapeGroup(newShapes);
+    }
+
+    public ShapeGroup rotateOutlineVertices(int subShapeIndex, int amt) {
+        Shape45[] newShapes = new Shape45[shapes.length];
+        for (int i = 0; i < shapes.length; i++) {
+            if (subShapeIndex >= 0 &&
+                subShapeIndex < shapes[i].getNumShapesRecursive()) {
+                newShapes[i] = shapes[i].rotateSubShapeOutlineVertices(subShapeIndex,
+                                                                       amt);
+            } else {
+                newShapes[i] = shapes[i];
+            }
+            subShapeIndex -= shapes[i].getNumShapesRecursive();
         }
         return new ShapeGroup(newShapes);
     }
@@ -499,11 +551,13 @@ public class ShapeGroup implements Iterable<Shape45> {
         private int i = 0;
         @Override
         public Triangle next() {
-            return triangles[i++];
+            return getTriangle(i++);
+            // return triangles[i++];
         }
         @Override
         public boolean hasNext() {
-            return i < triangles.length;
+            return i < getNumTriangles();
+            // return i < triangles.length;
         }
     }
 

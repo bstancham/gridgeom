@@ -134,6 +134,17 @@ public class ShapeWrapper {
         modShape = modShape.addVertexAfter(vertexIndex);
     }
 
+    /**
+     * <p>Rotate outline vertices in the sub-shape of the currently selected
+     * vertex.</p>
+     */
+    public void rotateVertices(int amt) {
+        int index = getSubShapeIndexForVertexIndex();
+        System.out.println("rotate vertex order: sub-shape index " + index);
+        if (index >= 0)
+            modShape = modShape.rotateOutlineVertices(index, amt);
+    }
+
 
     
     /*--------------------------- SUB-SHAPE ----------------------------*/
@@ -151,6 +162,10 @@ public class ShapeWrapper {
 
     public Shape45 getSubShape() {
         return modShape.getShapeRecursive(subShapeIndex).shift(xPos, yPos);
+    }
+
+    public int getSubShapeIndexForVertexIndex() {
+        return modShape.getSubShapeIndexForVertexIndex(vertexIndex);
     }
 
     public Shape45 getShapeForVertexIndex() {

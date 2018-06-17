@@ -14,7 +14,7 @@ public class DisplayShapesMode extends CanvasMode {
     private boolean showGrid = true;
     private boolean showMultiple = true;
     private boolean showDiagnostics = true;
-    // private boolean showTriangulation = false;
+    private boolean showTriangulation = false;
 
     // vertex editing
     private boolean vertexMode = false;
@@ -35,6 +35,9 @@ public class DisplayShapesMode extends CanvasMode {
 
         getKeys().add('m', () -> "show multiple " + KbdMode.boolStr(showMultiple),
                       () -> toggleShowMultiple());
+
+        getKeys().add('t', () -> "show triangulation " + KbdMode.boolStr(showTriangulation),
+                      () -> toggleShowTriangulation());
 
         getKeys().add('d', () -> "diagnostics " + KbdMode.boolStr(showDiagnostics),
                       () -> toggleShowDiagnostics());
@@ -90,6 +93,11 @@ public class DisplayShapesMode extends CanvasMode {
         vertexKeys.add('d', "delete vertex", () -> deleteVertex());
 
         vertexKeys.add('a', "add vertex (after)", () -> addVertex());
+
+        vertexKeys.add('{', '}',
+                       () -> "rotate vertices left/right",
+                       () -> rotateVerticesLeft(),
+                       () -> rotateVerticesRight());
 
         // SUB-SHAPE EDITING
 
@@ -160,10 +168,11 @@ public class DisplayShapesMode extends CanvasMode {
 
     @Override
     public void paint(Graphics g) {
-        
+
+        // hilight sub-shape for vertex editing
         if (vertexMode) {
-            Shape45 sub = slot().wrapper().getShapeForVertexIndex();
             g.setColor(Color.DARK_GRAY);
+            Shape45 sub = slot().wrapper().getShapeForVertexIndex();
             gfx().fillBox(g, sub.getBoundingBox());
         }
 
@@ -178,6 +187,7 @@ public class DisplayShapesMode extends CanvasMode {
             paintSlot(g, slot());
         }
 
+        // hilight shape for sub-shape editing
         if (subShapeMode) {
             g.setColor(Color.WHITE);
             gfx().shape(g, slot().wrapper().getSubShape());
@@ -210,6 +220,11 @@ public class DisplayShapesMode extends CanvasMode {
     }
 
     private void paintSlot(Graphics g, ShapeSlot ss) {
+
+        if (showTriangulation) {
+            gfx().numberedTriangles(g, ss.shape(), Color.LIGHT_GRAY, Color.RED);
+        }
+
         if (subShapeMode) {
             gfx().shapeNestedDepthFade(g, ss.shape(), ss.wrapper().getColor());
         } else {
@@ -282,6 +297,10 @@ public class DisplayShapesMode extends CanvasMode {
         showMultiple = !showMultiple;
     }
     
+    private void toggleShowTriangulation() {
+        showTriangulation = !showTriangulation;
+    }
+    
     private void toggleShowDiagnostics() {
         showDiagnostics = !showDiagnostics;
     }
@@ -335,6 +354,14 @@ public class DisplayShapesMode extends CanvasMode {
     private void addVertex() {
         slot().wrapper().addVertexAfterCurrent();
         nextVertex();
+    }
+
+    private void rotateVerticesLeft() {
+        slot().wrapper().rotateVertices(-1);
+    }
+
+    private void rotateVerticesRight() {
+        slot().wrapper().rotateVertices(1);
     }
 
 

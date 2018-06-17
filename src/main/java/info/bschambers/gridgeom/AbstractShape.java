@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
- * <p>Abstract parent class for a two-dimensional shape made up of an ordered
+ * <p>Immutable data type representing a two-dimensional shape made up of an ordered
  * collection of integer co-ordinate vertices.</p>
  */
 public abstract class AbstractShape implements Iterable<Pt2D> {
@@ -78,6 +78,14 @@ public abstract class AbstractShape implements Iterable<Pt2D> {
         Pt2D[] newVertices = new Pt2D[vertices.length];
         for (int i = 0; i < vertices.length; i++)
             newVertices[i] = vertices[i].rotate90(centerX, centerY);
+        return newVertices;
+    }
+
+    protected Pt2D[] rotateVertexOrder(int amt) {
+        Pt2D[] newVertices = new Pt2D[vertices.length];
+        for (int i = 0; i < vertices.length; i++) {
+            newVertices[i] = vertices[wrapIndex(i + amt)];
+        }
         return newVertices;
     }
 
@@ -170,8 +178,10 @@ public abstract class AbstractShape implements Iterable<Pt2D> {
     /*-------------------- PRIVATE UTILITY METHODS ---------------------*/
 
     protected int wrapIndex(int i) {
-        if (i < 0) return vertices.length - 1;
-        if (i >= vertices.length) return 0;
+        if (i < 0)
+            return vertices.length + i % vertices.length;
+        if (i >= vertices.length)
+            return i % vertices.length;
         return i;
     }
 

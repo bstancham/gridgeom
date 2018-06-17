@@ -8,11 +8,18 @@ import java.util.Collections;
 import java.util.Comparator;
 import static info.bschambers.gridgeom.Geom2D.WindingDir;
 
-
 /**
+ * <p>Immutable data type representing a two-dimensional shape made up of an ordered
+ * collection of integer co-ordinate vertices.</p>
+ *
+ * <p>Shape45 assumes that all corners have angles divisible by 45 degrees and
+ * relies on this for some methods to work properly.</p>
+ *
  * <p>NOTE: A shape with non-45 angles may be constructed! Use {@link isValid}
  * to test shape before using it. If angles are not ALL divisible by 45 degrees,
  * then many of the other methods will be unreliable..</p>
+ *
+ * <p>Shape45 may have nested sub-shapes.</p>
  *
  * <p>Rules:</p>
  * <ul>
@@ -26,11 +33,13 @@ import static info.bschambers.gridgeom.Geom2D.WindingDir;
  */
 public class Shape45 extends AbstractShape {
 
+    private WindingDir expectedWinding = WindingDir.CCW;
     private Shape45[] subShapes;
     private Triangle[] triangles = null;
     private Box2D boundingBox = null;
     private Integer totalNumVertices = null;
     private int nestedDepth;
+    private Boolean valid = null;
 
     public Shape45(Pt2D ... vertices) {
         this(new Shape45[0], vertices);
@@ -41,13 +50,31 @@ public class Shape45 extends AbstractShape {
     }
     
     public Shape45(Shape45[] subShapes, Pt2D ... vertices) {
+        // this(subShapes, vertices, WindingDir.CCW);
         super(vertices);
         this.subShapes = subShapes;
+
+        for (Shape45 sub : subShapes)
+            sub.setExpectedWinding(expectedWinding);
+
+        // get depth of deepest nested sub-shape and add 1
         int n = 0;
         for (Shape45 sub : subShapes)
             if (sub.getNestedDepth() > n)
                 n = sub.getNestedDepth();
         nestedDepth = n + 1;
+    }
+
+    private void setExpectedWinding(WindingDir parentWinding) {
+
+        if (parentWinding == WindingDir.CCW)
+            expectedWinding = WindingDir.CW;
+        
+        if (parentWinding == WindingDir.CW)
+            expectedWinding = WindingDir.CCW;
+        
+        for (Shape45 sub : subShapes)
+            sub.setExpectedWinding(expectedWinding);
     }
 
     public int getNumSubShapes() {
@@ -151,10 +178,41 @@ public class Shape45 extends AbstractShape {
         // index is out of range
         return null;
     }    
+
+    /**
+     * @return The index of sub-shape which contains the vertex at {@code
+     * index}, or {@code -1} if {@code index} is out of range.
+     */
+    public int getSubShapeIndexForVertexIndex(int index) {
+
+        // is vertex index in outline?
+        if (index < getNumVertices()) {
+            return 0;
+        }
+
+        index -= getNumVertices();
+        int count = 1;
+        for (int i = 0; i < subShapes.length; i++) {
+            if (index < subShapes[i].getTotalNumVertices())
+                return count + subShapes[i].getSubShapeIndexForVertexIndex(index);
+            index -= subShapes[i].getTotalNumVertices();
+            count += subShapes[i].getNumShapesRecursive();
+        }
+        
+        // index is out of range
+        return -1;
+    }    
     
     public boolean containsVertex(Pt2D v) {
         for (Pt2D vv : this)
             if (v.equals(vv))
+                return true;
+        return false;
+    }
+    
+    public boolean containsVertex(Pt2Df v) {
+        for (Pt2D vv : this)
+            if (vv.equalsValue(v))
                 return true;
         return false;
     }
@@ -203,14 +261,27 @@ public class Shape45 extends AbstractShape {
      * <p>Note that if the shape is not valid, many other methods cannot be
      * relied on to work properly.</p>
      *
+     * <p>WARNING: currently incomplete.</p>
+     *
+     * <p>TODO:</p>
+     * <ul>
+     * <li>sub-shapes properly nested</li>
+     * <li>intersection without edge-intersection</li>
+     * </ul>
+     *
      * @return True, if shape is valid. False otherwise.
      */
     public boolean isValid() {
-        return isValid(WindingDir.CW);
+        if (valid == null)
+            valid = testIsValid();
+        return valid;
     }
-    
-    public boolean isValid(WindingDir parentWinding) {
 
+    /**
+     * <p>Called only once - the first time isValid is called.</p>
+     */
+    private boolean testIsValid() {
+            
         // OUTLINE
         
         // OUTLINE: AT LEAST THREE VERTICES
@@ -220,8 +291,7 @@ public class Shape45 extends AbstractShape {
         if (!is45Compliant()) return false;
         
         // OUTLINE: WINDING DIRECTION MUST BE CCW
-        // if (!isCCWWinding()) return false;
-        if (!isChildWindingFor(parentWinding)) return false;
+        if (getWindingDir() != expectedWinding) return false;
         
         // OUTLINE: NO DUPLICATE VERTICES
         if (getNumDuplicateVertices() != 0) return false;
@@ -229,22 +299,23 @@ public class Shape45 extends AbstractShape {
         // OUTLINE: NO INTERSECTING EDGES
         if (getNumEdgeIntersections() !=0) return false;
 
-
-        
         // SUB-SHAPES
 
         for (Shape45 sub : subShapes) {
-
-            // SUB-SHAPE: ALL EDGES MUST BE INSIDE OUTLINE
-
-            // SUB-SHAPES MAY NOT INTERSECT ONEANOTHER
-
             
+            // SUB-SHAPE: ALL EDGES MUST BE INSIDE OUTLINE
+            
+            // SUB-SHAPES MAY NOT INTERSECT ONEANOTHER
+            for (Shape45 sub1 : subShapes)
+                for (Shape45 sub2 : subShapes)
+                    if (sub1 != sub2)
+                        if (sub1.intersectsIgnoreSharedVertices(sub2))
+                            return false;
 
-            if (!sub.isValid(getWindingDir())) return false;
+            if (!sub.isValid()) return false;
 
         }
-        
+
         return true;
     }
 
@@ -254,14 +325,6 @@ public class Shape45 extends AbstractShape {
         if (isCCWWinding())
             return WindingDir.CCW;
         return WindingDir.INDETERMINATE;
-    }
-
-    private boolean isChildWindingFor(WindingDir parentWinding) {
-        if (parentWinding == WindingDir.CW && getWindingDir() == WindingDir.CCW)
-            return true;
-        if (parentWinding == WindingDir.CCW && getWindingDir() == WindingDir.CW)
-            return true;
-        return false;
     }
 
     /**
@@ -280,16 +343,29 @@ public class Shape45 extends AbstractShape {
         }
         return num;
     }
+
+    public boolean intersectsIgnoreSharedVertices(Shape45 s) {
+        Set<Pt2Df> ipts = getIntersectionPoints(s);
+        
+        if (ipts.size() == 0)
+            return false;
+
+        // check each intersection point against vertices
+        for (Pt2Df p : ipts) {
+            if (!containsVertex(p)) return true;
+            if (!s.containsVertex(p)) return true;
+        }
+        
+        return false;
+    }
     
     /**
-     * @return True, if shape complies with the 45 degree rule, i.e. all angles
-     * are divisible by 45 degrees, and no angles are zero degrees.
+     * @return True, if shape complies with the 45 degree rule, i.e. every angle
+     * is either divisible by 45 degrees or is zero.
      */
     public boolean is45Compliant() {
         for (int i = 0; i < getNumVertices(); i++) {
             double angle = Math.toDegrees(getAngleAtVertex(i));
-            if (angle == 0)
-                return false;
             if (angle % 45 != 0)
                 return false;
         }
@@ -445,7 +521,6 @@ public class Shape45 extends AbstractShape {
         index--;
         Shape45[] newSubs = new Shape45[subShapes.length];
         for (int i = 0; i < subShapes.length; i++) {
-
             if (index >= 0 &&
                 index < subShapes[i].getNumShapesRecursive()) {
                 newSubs[i] = subShapes[i].reverseSubShapeWinding(index);
@@ -454,7 +529,29 @@ public class Shape45 extends AbstractShape {
             }
             index -= subShapes[i].getNumShapesRecursive();
         }
+        return new Shape45(newSubs, copyVertices());
+    }
 
+    public Shape45 rotateOutlineVertices(int amt) {
+        return new Shape45(getSubShapes(), rotateVertexOrder(amt));
+    }
+
+    public Shape45 rotateSubShapeOutlineVertices(int index, int amt) {
+        
+        if (index == 0)
+            return rotateOutlineVertices(amt);
+
+        index--;
+        Shape45[] newSubs = new Shape45[subShapes.length];
+        for (int i = 0; i < subShapes.length; i++) {
+            if (index >= 0 &&
+                index < subShapes[i].getNumShapesRecursive()) {
+                newSubs[i] = subShapes[i].rotateSubShapeOutlineVertices(index, amt);
+            } else {
+                newSubs[i] = subShapes[i];
+            }
+            index -= subShapes[i].getNumShapesRecursive();
+        }
         return new Shape45(newSubs, copyVertices());
     }
 

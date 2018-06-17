@@ -161,6 +161,10 @@ public class Gfx {
         }
     }
 
+    public void abstractShape(Graphics g, AbstractShape shape) {
+        abstractShape(g, shape, 0, 0);
+    }
+    
     public void abstractShape(Graphics g, AbstractShape shape, int x, int y) {
         Pt2D lastVertex = null;
         for (Pt2D vertex : shape) {
@@ -195,10 +199,29 @@ public class Gfx {
             shapeNestedDepthFade(g, sub, subColor);
     }
     
-    public void triangles(Graphics g, ShapeGroup shape, int x, int y) {
+    public void triangles(Graphics g, ShapeGroup shape) {
         Iterator<Triangle> iter = shape.triangleIterator();
         while (iter.hasNext())
-            abstractShape(g, iter.next(), x, y);
+            abstractShape(g, iter.next());
+    }
+
+    public void numberedTriangles(Graphics g, ShapeGroup shape,
+                                  Color triColor, Color textColor) {
+        Iterator<Triangle> iter = shape.triangleIterator();
+        int count = 1;
+        while (iter.hasNext()) {
+            Triangle tri = iter.next();
+            g.setColor(triColor);
+            abstractShape(g, tri);
+            // get centroid
+            Pt2Df centroid = tri.centroid();
+            int x = getX(centroid.x());
+            int y = getY(centroid.y());
+            // paint number
+            g.setColor(textColor);
+            g.drawString("" + count, x, y);
+            count++;
+        }
     }
 
     
