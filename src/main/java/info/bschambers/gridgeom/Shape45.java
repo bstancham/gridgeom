@@ -31,9 +31,10 @@ import static info.bschambers.gridgeom.Geom2D.WindingDir;
  * <li>holes have clockwise winding</li>
  * </ul>
  */
-public class Shape45 extends AbstractShape {
+public class Shape45 {
 
     private WindingDir expectedWinding = WindingDir.CCW;
+    private Polygon outline;
     private Shape45[] subShapes;
     private Triangle[] triangles = null;
     private Box2D boundingBox = null;
@@ -50,9 +51,12 @@ public class Shape45 extends AbstractShape {
     }
     
     public Shape45(Shape45[] subShapes, Pt2D ... vertices) {
-        // this(subShapes, vertices, WindingDir.CCW);
-        super(vertices);
+        this(subShapes, new Polygon(vertices));
+    }
+    
+    public Shape45(Shape45[] subShapes, Polygon outline) {
         this.subShapes = subShapes;
+        this.outline = outline;
 
         for (Shape45 sub : subShapes)
             sub.setExpectedWinding(expectedWinding);
@@ -75,6 +79,10 @@ public class Shape45 extends AbstractShape {
         
         for (Shape45 sub : subShapes)
             sub.setExpectedWinding(expectedWinding);
+    }
+
+    public Polygon getOutline() {
+        return outline;
     }
 
     public int getNumSubShapes() {
@@ -119,12 +127,16 @@ public class Shape45 extends AbstractShape {
         return null;
     }
 
+    public int getNumOutlineVertices() {
+        return outline.getNumVertices();
+    }
+    
     /**
      * @return Total combined number of vertices of outline and all sub-shapes.
      */
     public int getTotalNumVertices() {
         if (totalNumVertices == null) {
-            totalNumVertices = getNumVertices();
+            totalNumVertices = getNumOutlineVertices();
             for (Shape45 sub : subShapes)
                 totalNumVertices += sub.getTotalNumVertices();
         }
@@ -147,10 +159,10 @@ public class Shape45 extends AbstractShape {
      */
     public Pt2D getVertex(int index) {
         // index in outline
-        if (index < getNumVertices())
-            return super.getVertex(index);
+        if (index < getNumOutlineVertices())
+            return outline.getVertex(index);
         // index in sub-shape
-        int count = getNumVertices();
+        int count = getNumOutlineVertices();
         for (int i = 0; i < subShapes.length; i++) {
             if (index - count < subShapes[i].getTotalNumVertices())
                 return subShapes[i].getVertex(index - count);
@@ -163,12 +175,12 @@ public class Shape45 extends AbstractShape {
     public Shape45 getSubShapeForVertexIndex(int index) {
 
         // is vertex index in outline?
-        if (index < getNumVertices()) {
+        if (index < getNumOutlineVertices()) {
             return this;
         }
 
         // 
-        index -= getNumVertices();
+        index -= getNumOutlineVertices();
         for (int i = 0; i < subShapes.length; i++) {
             if (index < subShapes[i].getTotalNumVertices())
                 return subShapes[i].getSubShapeForVertexIndex(index);
@@ -186,11 +198,11 @@ public class Shape45 extends AbstractShape {
     public int getSubShapeIndexForVertexIndex(int index) {
 
         // is vertex index in outline?
-        if (index < getNumVertices()) {
+        if (index < getNumOutlineVertices()) {
             return 0;
         }
 
-        index -= getNumVertices();
+        index -= getNumOutlineVertices();
         int count = 1;
         for (int i = 0; i < subShapes.length; i++) {
             if (index < subShapes[i].getTotalNumVertices())
@@ -227,7 +239,7 @@ public class Shape45 extends AbstractShape {
         int highX = v.x();
         int lowY  = v.y();
         int highY = v.y();
-        for (int i = 1; i < getNumVertices(); i++) {
+        for (int i = 1; i < getNumOutlineVertices(); i++) {
             v = getVertex(i);
             if (v.x() < lowX)  lowX  = v.x();
             if (v.x() > highX) highX = v.x();
@@ -271,19 +283,19 @@ public class Shape45 extends AbstractShape {
         // OUTLINE
         
         // OUTLINE: AT LEAST THREE VERTICES
-        if (getNumVertices() < 3) return false;
+        if (getNumOutlineVertices() < 3) return false;
 
         // OUTLINE: ALL ANGLES MUST BE DIVISIBLE BY 45 DEGREES
-        if (!is45Compliant()) return false;
+        if (!outline.is45Compliant()) return false;
         
         // OUTLINE: WINDING DIRECTION MUST BE CCW
-        if (getWindingDir() != expectedWinding) return false;
+        if (outline.getWindingDir() != expectedWinding) return false;
         
         // OUTLINE: NO DUPLICATE VERTICES
-        if (getNumDuplicateVertices() != 0) return false;
+        if (outline.getNumDuplicateVertices() != 0) return false;
         
         // OUTLINE: NO INTERSECTING EDGES
-        if (getNumEdgeIntersections() !=0) return false;
+        if (getNumOutlineSelfIntersections45() !=0) return false;
 
         // SUB-SHAPES
 
@@ -291,12 +303,11 @@ public class Shape45 extends AbstractShape {
             
             // SUB-SHAPE: ALL EDGES MUST BE INSIDE OUTLINE
             
-            // SUB-SHAPES MAY NOT INTERSECT ONEANOTHER
-            for (Shape45 sub1 : subShapes)
-                for (Shape45 sub2 : subShapes)
-                    if (sub1 != sub2)
-                        if (sub1.intersects45IgnoreSharedVertices(sub2))
-                            return false;
+            // SUB-SHAPES MAY NOT INTERSECT ONE-ANOTHER
+            for (Shape45 sub2 : subShapes)
+                if (sub != sub2)
+                    if (sub.getOutline().intersects45IgnoreSharedVertices(sub2.getOutline()))
+                        return false;
 
             if (!sub.isValid()) return false;
 
@@ -305,20 +316,25 @@ public class Shape45 extends AbstractShape {
         return true;
     }
 
-    public WindingDir getWindingDir() {
-        if (isCWWinding())
-            return WindingDir.CW;
-        if (isCCWWinding())
-            return WindingDir.CCW;
-        return WindingDir.INDETERMINATE;
+    /**
+     * @return True, if shape and all sub-shapes comply with the 45 degree rule,
+     * i.e. every angle is either divisible by 45 degrees or is zero.
+     */
+    public boolean is45Compliant() {
+        if (!outline.is45Compliant())
+            return false;
+        for (Shape45 sub : subShapes)
+            if (!sub.is45Compliant())
+                return false;
+        return true;
     }
-
+    
     /**
      * <p>WARNING: Not guaranteed to work unless shape is 45-compliant.</p>
      */
-    public int getNumEdgeIntersections() {
+    public int getNumOutlineSelfIntersections45() {
         int num = 0;
-        Line[] edges = getEdges();
+        Line[] edges = outline.getEdges();
         for (Line edge1 : edges) {
             for (Line edge2 : edges) {
                 if (edge1 != edge2) {
@@ -328,19 +344,6 @@ public class Shape45 extends AbstractShape {
             }
         }
         return num;
-    }
-
-    /**
-     * @return True, if shape complies with the 45 degree rule, i.e. every angle
-     * is either divisible by 45 degrees or is zero.
-     */
-    public boolean is45Compliant() {
-        for (int i = 0; i < getNumVertices(); i++) {
-            double angle = Math.toDegrees(getAngleAtVertex(i));
-            if (angle % 45 != 0)
-                return false;
-        }
-        return true;
     }
 
     public int getNestedDepth() {
@@ -373,7 +376,7 @@ public class Shape45 extends AbstractShape {
      * angles.</p>
      */
     private void triangulateConvexSimple() {
-        triangles = new Triangle[getNumVertices() - 2];
+        triangles = new Triangle[getNumOutlineVertices() - 2];
         for (int i = 0; i < triangles.length; i++) {
             triangles[i] = new Triangle(getVertex(0),
                                         getVertex(i + 1),
@@ -390,7 +393,7 @@ public class Shape45 extends AbstractShape {
 
     private class EarClippingTriangulator {
         
-        private boolean[] used = new boolean[getNumVertices()];
+        private boolean[] used = new boolean[getNumOutlineVertices()];
         private int a = 0;
         private int b = 0;
         private int c = 0;
@@ -473,7 +476,7 @@ public class Shape45 extends AbstractShape {
                 return false;
 
             Line ln = new Line(getVertex(i1), getVertex(i2));
-            if (intersects45IgnoreSharedVertices(ln))
+            if (getOutline().intersects45IgnoreSharedVertices(ln))
                 return true;
                 
             return false;
@@ -482,7 +485,7 @@ public class Shape45 extends AbstractShape {
         private boolean contingentIndices(int i1, int i2) {
             if (i1 < i2 && i1 == i2 - 1)
                 return true;
-            if (i1 == getNumVertices() - 1 &&
+            if (i1 == getNumOutlineVertices() - 1 &&
                 i2 == 0)
                 return true;
             return false;
@@ -501,8 +504,7 @@ public class Shape45 extends AbstractShape {
         Shape45[] newSubs = new Shape45[subShapes.length];
         for (int i = 0; i < subShapes.length; i++)
             newSubs[i] = subShapes[i].shift(x, y);
-        Pt2D[] newVerts = transposeVertices(x, y);
-        return new Shape45(newSubs, newVerts);
+        return new Shape45(newSubs, getOutline().shift(x, y));
     }
 
     /**
@@ -524,7 +526,7 @@ public class Shape45 extends AbstractShape {
             }
             index -= subShapes[i].getNumShapesRecursive();
         }
-        return new Shape45(newSubs, copyVertices());
+        return new Shape45(newSubs, getOutline());
     }
 
     /**
@@ -554,7 +556,7 @@ public class Shape45 extends AbstractShape {
             index -= subShapes[i].getNumShapesRecursive();
         }
         return new Shape45(newSubs.toArray(new Shape45[newSubs.size()]),
-                           copyVertices());
+                           getOutline());
     }
     
     public Shape45 addSubShapeRecursive(int index, Shape45 newSubShape) {
@@ -571,7 +573,7 @@ public class Shape45 extends AbstractShape {
                 newSubs[i] = subShapes[i];
             }
             newSubs[subShapes.length] = newSubShape;
-            return new Shape45(newSubs, copyVertices());
+            return new Shape45(newSubs, getOutline());
         }
 
         // find index in sub-shapes
@@ -587,14 +589,14 @@ public class Shape45 extends AbstractShape {
             index -= subShapes[i].getNumShapesRecursive();
         }
 
-        return new Shape45(newSubs, copyVertices());
+        return new Shape45(newSubs, getOutline());
     }
 
     public Shape45 reverseWinding() {
         Shape45[] newSubs = new Shape45[subShapes.length];
         for (int i = 0; i < subShapes.length; i++)
             newSubs[i] = subShapes[i].reverseWinding();
-        return new Shape45(newSubs, reverseVertices());
+        return new Shape45(newSubs, getOutline().reverseWinding());
     }
 
     public Shape45 reverseSubShapeWinding(int index) {
@@ -613,30 +615,31 @@ public class Shape45 extends AbstractShape {
             }
             index -= subShapes[i].getNumShapesRecursive();
         }
-        return new Shape45(newSubs, copyVertices());
+        return new Shape45(newSubs, getOutline());
     }
 
-    public Shape45 rotateOutlineVertices(int amt) {
-        return new Shape45(getSubShapes(), rotateVertexOrder(amt));
+    public Shape45 rotateOutlineVertexOrder(int amt) {
+        return new Shape45(getSubShapes(),
+                           getOutline().rotateVertexOrder(amt));
     }
 
-    public Shape45 rotateSubShapeOutlineVertices(int index, int amt) {
+    public Shape45 rotateSubShapeOutlineVertexOrder(int index, int amt) {
         
         if (index == 0)
-            return rotateOutlineVertices(amt);
+            return rotateOutlineVertexOrder(amt);
 
         index--;
         Shape45[] newSubs = new Shape45[subShapes.length];
         for (int i = 0; i < subShapes.length; i++) {
             if (index >= 0 &&
                 index < subShapes[i].getNumShapesRecursive()) {
-                newSubs[i] = subShapes[i].rotateSubShapeOutlineVertices(index, amt);
+                newSubs[i] = subShapes[i].rotateSubShapeOutlineVertexOrder(index, amt);
             } else {
                 newSubs[i] = subShapes[i];
             }
             index -= subShapes[i].getNumShapesRecursive();
         }
-        return new Shape45(newSubs, copyVertices());
+        return new Shape45(newSubs, getOutline());
     }
 
     /**
@@ -647,16 +650,16 @@ public class Shape45 extends AbstractShape {
     public Shape45 setVertex(int index, int x, int y) {
         
         // OUTLINE
-        Pt2D[] newVertices = new Pt2D[getNumVertices()];
-        for (int i = 0; i < getNumVertices(); i++) {
+        Pt2D[] newVertices = new Pt2D[getNumOutlineVertices()];
+        for (int i = 0; i < getNumOutlineVertices(); i++) {
             if (i == index)
                 newVertices[i] = new Pt2D(x, y);
             else
-                newVertices[i] = super.getVertex(i);
+                newVertices[i] = getOutline().getVertex(i);
         }
 
         // SUB-SHAPES
-        int count = getNumVertices();
+        int count = getNumOutlineVertices();
         Shape45[] newSubs = new Shape45[subShapes.length];
         for (int i = 0; i < subShapes.length; i++) {
             if (index - count < subShapes[i].getTotalNumVertices()) {
@@ -673,19 +676,19 @@ public class Shape45 extends AbstractShape {
     public Shape45 deleteVertex(int index) {
         
         // OUTLINE
-        int newLen = getNumVertices();
-        if (index < getNumVertices())
+        int newLen = getNumOutlineVertices();
+        if (index < getNumOutlineVertices())
             newLen--;
         Pt2D[] newVertices = new Pt2D[newLen];
-        for (int i = 0; i < getNumVertices(); i++) {
+        for (int i = 0; i < getNumOutlineVertices(); i++) {
             if (i < index)
-                newVertices[i] = super.getVertex(i);
+                newVertices[i] = getOutline().getVertex(i);
             else if (i > index)
-                newVertices[i - 1] = super.getVertex(i);
+                newVertices[i - 1] = getOutline().getVertex(i);
         }
         
         // SUB-SHAPES
-        int count = getNumVertices();
+        int count = getNumOutlineVertices();
         Shape45[] newSubs = new Shape45[subShapes.length];
         for (int i = 0; i < subShapes.length; i++) {
             if (count < index &&
@@ -704,27 +707,29 @@ public class Shape45 extends AbstractShape {
     public Shape45 addVertexAfter(int index) {
         
         // OUTLINE
-        int len = (index < getNumVertices() ? getNumVertices() + 1 : getNumVertices());
+        int len = (index < getNumOutlineVertices() ?
+                   getNumOutlineVertices() + 1 :
+                   getNumOutlineVertices());
         Pt2D[] newVertices = new Pt2D[len];
-        for (int i = 0; i < getNumVertices(); i++) {
+        for (int i = 0; i < getNumOutlineVertices(); i++) {
             if (i <= index) {
-                newVertices[i] = super.getVertex(i);
+                newVertices[i] = getOutline().getVertex(i);
                 if (i == index) {
                     // new point equidistant between
-                    Pt2D v = Geom2D.midPointInt(super.getVertex(i),
-                                                super.getVertex(wrapIndex(i + 1)));
+                    Pt2D v = Geom2D.midPointInt(getOutline().getVertex(i),
+                                                getOutline().getVertexWrapped(i + 1));
                     // make sure not duplicate vertex before adding it
-                    while (containsVertex(v))
+                    while (getOutline().containsVertex(v))
                         v = v.transpose(0, 1);
                     newVertices[i + 1] = v;
                 }
             } else {
-                newVertices[i + 1] = super.getVertex(i);
+                newVertices[i + 1] = getOutline().getVertex(i);
             }
         }
 
         // SUB-SHAPES
-        int count = getNumVertices();
+        int count = getNumOutlineVertices();
         Shape45[] newSubs = new Shape45[subShapes.length];
         for (int i = 0; i < subShapes.length; i++) {
             if (count < index &&
@@ -744,34 +749,31 @@ public class Shape45 extends AbstractShape {
         Shape45[] newSubs = new Shape45[subShapes.length];
         for (int i = 0; i < subShapes.length; i++)
             newSubs[i] = subShapes[i].reflectX(center);
-        Pt2D[] newVerts = reflectVerticesX(center);
-        return new Shape45(newSubs, newVerts);
+        return new Shape45(newSubs, getOutline().reflectX(center));
     }
 
     public Shape45 reflectY(int center) {
         Shape45[] newSubs = new Shape45[subShapes.length];
         for (int i = 0; i < subShapes.length; i++)
             newSubs[i] = subShapes[i].reflectY(center);
-        Pt2D[] newVerts = reflectVerticesY(center);
-        return new Shape45(newSubs, newVerts);
+        return new Shape45(newSubs, getOutline().reflectY(center));
     }
 
     public Shape45 rotate90(int centerX, int centerY) {
         Shape45[] newSubs = new Shape45[subShapes.length];
         for (int i = 0; i < subShapes.length; i++)
             newSubs[i] = subShapes[i].rotate90(centerX, centerY);
-        Pt2D[] newVerts = rotateVertices90(centerX, centerY);
-        return new Shape45(newSubs, newVerts);
+        return new Shape45(newSubs, outline.rotate90(centerX, centerY));
     }
 
     public List<Shape45> subtract45(Shape45 s) {
 
         // get edges
         List<Line> homeLines = new ArrayList<>(); //getEdges());
-        for (Line edge : getEdges())
+        for (Line edge : getOutline().getEdges())
             homeLines.add(edge);
         List<Line> awayLines = new ArrayList<>(); //s.getEdges());
-        for (Line edge : s.getEdges())
+        for (Line edge : s.getOutline().getEdges())
             awayLines.add(edge);
         
         // get intersection points
@@ -911,10 +913,10 @@ public class Shape45 extends AbstractShape {
         }
 
         // OUTLINE
-        for (int i = 0; i < getNumVertices(); i++) {
+        for (int i = 0; i < outline.getNumVertices(); i++) {
             Pt2D v = getVertex(i);
             sb.append("new Pt2D(" + v.x() + ", " + v.y() + ")");
-            if (i < getNumVertices() - 1)
+            if (i < outline.getNumVertices() - 1)
                 sb.append(",\n");
         }
         

@@ -56,11 +56,13 @@ public class ShapeGroup implements Iterable<Shape45> {
                 if (!s.isValid())
                     valid = false;
 
-            // shapes must not intersect
+            // shapes must not intersect ... test outlines only -
+            // Shape45.isValid() will have taken care of other potential
+            // conditions
             for (Shape45 s1 : shapes)
                 for (Shape45 s2 : shapes)
                     if (s1 != s2)
-                        if (s1.intersects45IgnoreSharedVertices(s2))
+                        if (s1.getOutline().intersects45IgnoreSharedVertices(s2.getOutline()))
                             valid = false;
 
             // top-level shapes must not be illegally nested
@@ -283,13 +285,13 @@ public class ShapeGroup implements Iterable<Shape45> {
         return new ShapeGroup(newShapes);
     }
 
-    public ShapeGroup rotateOutlineVertices(int subShapeIndex, int amt) {
+    public ShapeGroup rotateSubShapeVertexOrder(int subShapeIndex, int amt) {
         Shape45[] newShapes = new Shape45[shapes.length];
         for (int i = 0; i < shapes.length; i++) {
             if (subShapeIndex >= 0 &&
                 subShapeIndex < shapes[i].getNumShapesRecursive()) {
-                newShapes[i] = shapes[i].rotateSubShapeOutlineVertices(subShapeIndex,
-                                                                       amt);
+                newShapes[i] = shapes[i].rotateSubShapeOutlineVertexOrder(subShapeIndex,
+                                                                          amt);
             } else {
                 newShapes[i] = shapes[i];
             }
@@ -432,7 +434,7 @@ public class ShapeGroup implements Iterable<Shape45> {
                 // Shape45[] topShapes = new Shape45[shapes.length + 1];
                 System.arraycopy(s.getSubShapes(), 0, newSubs, 0, s.getNumSubShapes());
                 newSubs[s.getNumSubShapes()] = newSubShape;
-                return new Shape45(newSubs, s.copyVertices());
+                return new Shape45(newSubs, s.getOutline());
             } else if (index > 0 &&
                        index < s.getSubShape(i).getNumShapesRecursive()) {
                 // delegate to sub-shape
@@ -442,7 +444,7 @@ public class ShapeGroup implements Iterable<Shape45> {
             }
             index -= s.getSubShape(i).getNumShapesRecursive();
         }
-        return new Shape45(subs, s.copyVertices());
+        return new Shape45(subs, s.getOutline());
     }
     
     public ShapeGroup subtract45(ShapeGroup sg) {
@@ -479,11 +481,14 @@ public class ShapeGroup implements Iterable<Shape45> {
         }
     }
 
+    /**
+     * <p>TODO: </p>
+     */
     public Set<Pt2Df> getIntersectionPoints45(ShapeGroup gs) {
         Set<Pt2Df> points = new HashSet<>();
         for (Shape45 s1 : shapes) {
             for (Shape45 s2 : gs.shapes) {
-                points.addAll(s1.getIntersectionPoints45(s2));
+                points.addAll(s1.getOutline().getIntersectionPoints45(s2.getOutline()));
             }
         }
         return points;

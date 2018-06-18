@@ -53,9 +53,9 @@ public class ValidateShapeMode extends DisplayShapesMode {
             
             // WINDING DIRECTION
             String str = "WINDING: ";
-            if (s.isCCWWinding()) {
+            if (s.getOutline().isCCWWinding()) {
                 str += "CCW";
-            } else if (s.isCWWinding()) {
+            } else if (s.getOutline().isCWWinding()) {
                 str += "CW";
                 col = Color.PINK;
             } else {
@@ -63,17 +63,17 @@ public class ValidateShapeMode extends DisplayShapesMode {
                 col = Color.RED;
             }
             text.add(col, str
-                     + " --- sum of angles: " + Math.toDegrees(s.getSumAngles())
-                     + " degrees (" + s.getSumAngles() + ")");
+                     + " --- sum of angles: " + Math.toDegrees(s.getOutline().getSumAngles())
+                     + " degrees (" + s.getOutline().getSumAngles() + ")");
 
             // DUPLICATE VERTICES
-            int numDuplicates = s.getNumDuplicateVertices();
+            int numDuplicates = s.getOutline().getNumDuplicateVertices();
             text.addIfElse(numDuplicates == 0,
                            textCol, "DUPLICATE VERTICES: " + numDuplicates,
                            Color.RED,  "DUPLICATE VERTICES: " + numDuplicates);
 
             // EDGE INTERSECTIONS
-            numDuplicates = s.getNumEdgeIntersections();
+            numDuplicates = s.getNumOutlineSelfIntersections45();
             text.addIfElse(numDuplicates == 0,
                            textCol, "EDGE INTERSECTIONS: " + numDuplicates,
                            Color.RED,  "EDGE INTERSECTIONS: " + numDuplicates);

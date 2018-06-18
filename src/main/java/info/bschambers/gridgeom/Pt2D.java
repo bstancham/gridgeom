@@ -1,5 +1,9 @@
 package info.bschambers.gridgeom;
 
+/**
+ * <p>Immutable data type representing a point in 2D space with {@code int}
+ * co-ordinates.</p>
+ */
 public class Pt2D {
 
     private int x;
@@ -44,16 +48,16 @@ public class Pt2D {
     }
 
     /**
-     * Returns the slope between this point and the input point.
-     * Formally, if the two points are (x0, y0) and (x1, y1), then the slope
-     * is (y1 - y0) / (x1 - x0).
+     * <p>Returns the slope between this point and the input point.  Formally,
+     * if the two points are {@code (x0, y0)} and {@code (x1, y1)}, then the
+     * slope is {@code (y1 - y0) / (x1 - x0)}.</p>
      *
      * @param p The input point.
      * @return The slope between this point and the input point.<br>
      * SPECIAL CASES:<br>
-     * - horizontal line returns +0.0.<br>
-     * - vertical line returns Double.POSITIVE_INFINITY.<br>
-     * - degenerate line returns Double.NEGATIVE_INFINITY.
+     * - horizontal line returns {@code +0.0}.<br>
+     * - vertical line returns {@code Double.POSITIVE_INFINITY}.<br>
+     * - degenerate line returns {@code Double.NEGATIVE_INFINITY}.
      */
     public double slopeTo(Pt2D p) {
         if (p.equals(this)) return Double.NEGATIVE_INFINITY; // degenerate

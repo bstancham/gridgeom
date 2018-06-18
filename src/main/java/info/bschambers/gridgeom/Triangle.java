@@ -3,7 +3,7 @@ package info.bschambers.gridgeom;
 /**
  * <p>Immutable data type representing a triangle with integer co-ordinates.</p>
  */
-public class Triangle extends AbstractShape {
+public class Triangle extends Polygon {
 
     public Triangle(Pt2D v1, Pt2D v2, Pt2D v3) {
         super(new Pt2D[] { v1, v2, v3 });

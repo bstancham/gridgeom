@@ -154,20 +154,20 @@ public class Gfx {
     
     public void shape(Graphics g, Shape45 s, int x, int y) {
         // draw outline
-        abstractShape(g, s, x, y);
+        polygon(g, s.getOutline(), x, y);
         // draw sub-shapes
         for (int i = 0; i < s.getNumSubShapes(); i++) {
             shape(g, s.getSubShape(i), x, y);
         }
     }
 
-    public void abstractShape(Graphics g, AbstractShape shape) {
-        abstractShape(g, shape, 0, 0);
+    public void polygon(Graphics g, Polygon poly) {
+        polygon(g, poly, 0, 0);
     }
     
-    public void abstractShape(Graphics g, AbstractShape shape, int x, int y) {
+    public void polygon(Graphics g, Polygon poly, int x, int y) {
         Pt2D lastVertex = null;
-        for (Pt2D vertex : shape) {
+        for (Pt2D vertex : poly) {
             if (lastVertex != null) {
                 Pt2D v1 = lastVertex.transpose(x, y);
                 Pt2D v2 = vertex.transpose(x, y);
@@ -176,7 +176,7 @@ public class Gfx {
             }
             lastVertex = vertex;
         }
-        arrow(g, lastVertex.transpose(x, y), shape.getVertex(0).transpose(x, y));
+        arrow(g, lastVertex.transpose(x, y), poly.getVertex(0).transpose(x, y));
     }
 
     public void shapeNestedDepthFade(Graphics g, ShapeGroup sg, Color c) {
@@ -188,7 +188,7 @@ public class Gfx {
 
         // paint outline
         g.setColor(c);
-        abstractShape(g, s, 0, 0);
+        polygon(g, s.getOutline());
 
         // get color for sub-shapes
         int depth = s.getNestedDepth();
@@ -202,7 +202,7 @@ public class Gfx {
     public void triangles(Graphics g, ShapeGroup shape) {
         Iterator<Triangle> iter = shape.triangleIterator();
         while (iter.hasNext())
-            abstractShape(g, iter.next());
+            polygon(g, iter.next());
     }
 
     public void numberedTriangles(Graphics g, ShapeGroup shape,
@@ -212,7 +212,7 @@ public class Gfx {
         while (iter.hasNext()) {
             Triangle tri = iter.next();
             g.setColor(triColor);
-            abstractShape(g, tri);
+            polygon(g, tri);
             // get centroid
             Pt2Df centroid = tri.centroid();
             int x = getX(centroid.x());

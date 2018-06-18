@@ -1,7 +1,8 @@
 package info.bschambers.gridgeom;
 
 /**
- * <p>Immutable data type.</p>
+ * <p>Immutable data type representing a point in 2D space with {@code float}
+ * co-ordinates.</p>
  */
 public class Pt2Df {
 

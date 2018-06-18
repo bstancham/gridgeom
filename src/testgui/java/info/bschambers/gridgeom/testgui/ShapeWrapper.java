@@ -121,7 +121,7 @@ public class ShapeWrapper {
 
     public boolean deleteCurrentVertex() {
         Shape45 sub = modShape.getShapeForVertexIndex(vertexIndex);
-        if (sub.getNumVertices() > 3) {
+        if (sub.getNumOutlineVertices() > 3) {
             modShape = modShape.deleteVertex(vertexIndex);
             return true;
         } else {
@@ -142,7 +142,7 @@ public class ShapeWrapper {
         int index = getSubShapeIndexForVertexIndex();
         System.out.println("rotate vertex order: sub-shape index " + index);
         if (index >= 0)
-            modShape = modShape.rotateOutlineVertices(index, amt);
+            modShape = modShape.rotateSubShapeVertexOrder(index, amt);
     }
 
 

@@ -1,5 +1,9 @@
 package info.bschambers.gridgeom;
 
+/**
+ * <p>Immutable data type representing a rectangular region with {@code int}
+ * co-ordinates.</p>
+ */
 public class Box2D {
 
     public final int lowX;

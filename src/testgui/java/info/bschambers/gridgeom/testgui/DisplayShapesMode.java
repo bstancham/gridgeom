@@ -247,9 +247,9 @@ public class DisplayShapesMode extends CanvasMode {
             
         // WINDING DIRECTION
         String str = "WINDING: ";
-        if (s.isCCWWinding()) {
+        if (s.getOutline().isCCWWinding()) {
             str += "CCW";
-        } else if (s.isCWWinding()) {
+        } else if (s.getOutline().isCWWinding()) {
             str += "CW";
             col = Color.PINK;
         } else {
@@ -257,17 +257,17 @@ public class DisplayShapesMode extends CanvasMode {
             col = Color.RED;
         }
         text.add(col, pad + str
-                 + " --- sum of angles: " + Math.toDegrees(s.getSumAngles())
-                 + " degrees (" + s.getSumAngles() + ")");
+                 + " --- sum of angles: " + Math.toDegrees(s.getOutline().getSumAngles())
+                 + " degrees (" + s.getOutline().getSumAngles() + ")");
 
         // DUPLICATE VERTICES
-        int numDuplicates = s.getNumDuplicateVertices();
+        int numDuplicates = s.getOutline().getNumDuplicateVertices();
         text.addIfElse(numDuplicates == 0,
                        textCol, pad + "DUPLICATE VERTICES: " + numDuplicates,
                        Color.RED, pad + "DUPLICATE VERTICES: " + numDuplicates);
 
         // EDGE INTERSECTIONS
-        numDuplicates = s.getNumEdgeIntersections();
+        numDuplicates = s.getNumOutlineSelfIntersections45();
         text.addIfElse(numDuplicates == 0,
                        textCol, pad + "EDGE INTERSECTIONS: " + numDuplicates,
                        Color.RED,  pad + "EDGE INTERSECTIONS: " + numDuplicates);

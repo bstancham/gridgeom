@@ -5,17 +5,18 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
+import static info.bschambers.gridgeom.Geom2D.WindingDir;
 
 /**
- * <p>Immutable data type representing a two-dimensional shape made up of an ordered
- * collection of integer co-ordinate vertices.</p>
+ * <p>Immutable data type representing a polygon made up of an ordered
+ * collection of {@code int} co-ordinate vertices.</p>
  */
-public abstract class AbstractShape implements Iterable<Pt2D> {
+public class Polygon implements Iterable<Pt2D> {
 
     private Pt2D[] vertices;
     private Double sumAnglesDegrees = null;
 
-    public AbstractShape(Pt2D ... vertices) {
+    public Polygon(Pt2D ... vertices) {
         this.vertices = vertices;
     }
 
@@ -23,6 +24,10 @@ public abstract class AbstractShape implements Iterable<Pt2D> {
 
     public Pt2D getVertex(int index) {
         return vertices[index];
+    }
+
+    public Pt2D getVertexWrapped(int index) {
+        return vertices[wrapIndex(index)];
     }
 
     public boolean containsVertex(Pt2D v) {
@@ -54,56 +59,50 @@ public abstract class AbstractShape implements Iterable<Pt2D> {
         return edges;
     }
 
-    protected Pt2D[] copyVertices() {
-        Pt2D[] newVertices = new Pt2D[vertices.length];
-        System.arraycopy(vertices, 0, newVertices, 0, vertices.length);
-        return newVertices;
-    }
-
-    protected Pt2D[] transposeVertices(int x, int y) {
+    public Polygon shift(int x, int y) {
         Pt2D[] newVertices = new Pt2D[vertices.length];
         for (int i = 0; i < vertices.length; i++)
             newVertices[i] = vertices[i].transpose(x, y);
-        return newVertices;
+        return new Polygon(newVertices);
     }
 
-    protected Pt2D[] reverseVertices() {
-        Pt2D[] nVertices = new Pt2D[vertices.length];
+    public Polygon reverseWinding() {
+        Pt2D[] newVertices = new Pt2D[vertices.length];
         for (int i = 0; i < vertices.length; i++)
-            nVertices[i] = vertices[vertices.length - 1 - i];
-        return nVertices;
+            newVertices[i] = vertices[vertices.length - 1 - i];
+        return new Polygon(newVertices);
     }
 
-    protected Pt2D[] reflectVerticesX(int center) {
+    public Polygon reflectX(int center) {
         Pt2D[] newVertices = new Pt2D[vertices.length];
         for (int i = 0; i < vertices.length; i++)
             newVertices[i] = vertices[i].reflectX(center);
-        return newVertices;
+        return new Polygon(newVertices);
     }
 
-    protected Pt2D[] reflectVerticesY(int center) {
+    public Polygon reflectY(int center) {
         Pt2D[] newVertices = new Pt2D[vertices.length];
         for (int i = 0; i < vertices.length; i++)
             newVertices[i] = vertices[i].reflectY(center);
-        return newVertices;
+        return new Polygon(newVertices);
     }
 
-    protected Pt2D[] rotateVertices90(int centerX, int centerY) {
+    public Polygon rotate90(int centerX, int centerY) {
         Pt2D[] newVertices = new Pt2D[vertices.length];
         for (int i = 0; i < vertices.length; i++)
             newVertices[i] = vertices[i].rotate90(centerX, centerY);
-        return newVertices;
+        return new Polygon(newVertices);
     }
 
-    protected Pt2D[] rotateVertexOrder(int amt) {
+    public Polygon rotateVertexOrder(int amt) {
         Pt2D[] newVertices = new Pt2D[vertices.length];
         for (int i = 0; i < vertices.length; i++) {
             newVertices[i] = vertices[wrapIndex(i + amt)];
         }
-        return newVertices;
+        return new Polygon(newVertices);
     }
 
-    public Set<Pt2Df> getIntersectionPoints45(AbstractShape s) {
+    public Set<Pt2Df> getIntersectionPoints45(Polygon s) {
         Set<Pt2Df> points = new HashSet<>();
         // intersect all lines
         for (Line l1 : getEdges()) {
@@ -123,8 +122,9 @@ public abstract class AbstractShape implements Iterable<Pt2D> {
         return points;
     }
     
-    public boolean intersects45IgnoreSharedVertices(Shape45 s) {
-        Set<Pt2Df> ipts = getIntersectionPoints45(s);
+    // public boolean intersects45IgnoreSharedVertices(Shape45 s) {
+    public boolean intersects45IgnoreSharedVertices(Polygon poly) {
+        Set<Pt2Df> ipts = getIntersectionPoints45(poly);
         
         if (ipts.size() == 0)
             return false;
@@ -132,7 +132,7 @@ public abstract class AbstractShape implements Iterable<Pt2D> {
         // check each intersection point against vertices
         for (Pt2Df p : ipts) {
             if (!containsVertex(p)) return true;
-            if (!s.containsVertex(p)) return true;
+            if (!poly.containsVertex(p)) return true;
         }
         
         return false;
@@ -180,6 +180,19 @@ public abstract class AbstractShape implements Iterable<Pt2D> {
     /*--------------------------- DIAGNOSTIC ---------------------------*/
 
     /**
+     * @return True, if shape complies with the 45 degree rule, i.e. every angle
+     * is either divisible by 45 degrees or is zero.
+     */
+    public boolean is45Compliant() {
+        for (int i = 0; i < getNumVertices(); i++) {
+            double angle = Math.toDegrees(getAngleAtVertex(i));
+            if (angle % 45 != 0)
+                return false;
+        }
+        return true;
+    }
+
+    /**
      * @throws IndexOutOfBoundsException if number of vertices in shape is less
      * than three.
      */
@@ -201,6 +214,14 @@ public abstract class AbstractShape implements Iterable<Pt2D> {
         return sumAnglesDegrees;
     }
 
+    public WindingDir getWindingDir() {
+        if (isCWWinding())
+            return WindingDir.CW;
+        if (isCCWWinding())
+            return WindingDir.CCW;
+        return WindingDir.INDETERMINATE;
+    }
+    
     public boolean isCWWinding() {
         return getSumAngles() == -(Math.PI * 2);
     }
@@ -243,7 +264,7 @@ public abstract class AbstractShape implements Iterable<Pt2D> {
 
     /*-------------------- PRIVATE UTILITY METHODS ---------------------*/
 
-    protected int wrapIndex(int i) {
+    private int wrapIndex(int i) {
         if (i < 0)
             return vertices.length + i % vertices.length;
         if (i >= vertices.length)
