@@ -24,4 +24,29 @@ public class Geom2DTest {
 
     }
 
+    @Test
+    public void testAngleIsLeftOrRightTurn() {
+        
+        Pt2D p1 = new Pt2D(2, 1);
+        Pt2D p2 = new Pt2D(6, 1);
+        Pt2D p3 = new Pt2D(5, 5);
+
+        assertTrue(Geom2D.isLeftTurn(p1, p2, p3));
+        assertFalse(Geom2D.isRightTurn(p1, p2, p3));
+
+        assertTrue(Geom2D.isRightTurn(p1, p3, p2));
+        assertFalse(Geom2D.isLeftTurn(p1, p3, p2));
+
+    }
+
+    @Test
+    public void testCollinear() {
+        Pt2D col1 = new Pt2D(3, 1);
+        Pt2D col2 = new Pt2D(7, 5);
+        Pt2D col3 = new Pt2D(6, 4);
+        Pt2D p1 = new Pt2D(6, 5);
+        assertTrue(Geom2D.collinear(col1, col2, col3));
+        assertFalse(Geom2D.collinear(col1, col2, p1));
+    }
+
 }

@@ -25,6 +25,20 @@ public abstract class AbstractShape implements Iterable<Pt2D> {
         return vertices[index];
     }
 
+    public boolean containsVertex(Pt2D v) {
+        for (Pt2D vv : this)
+            if (v.equals(vv))
+                return true;
+        return false;
+    }
+    
+    public boolean containsVertex(Pt2Df v) {
+        for (Pt2D vv : this)
+            if (vv.equalsValue(v))
+                return true;
+        return false;
+    }
+    
 
 
     /*---------------------------- GEOMETRY ----------------------------*/
@@ -89,12 +103,12 @@ public abstract class AbstractShape implements Iterable<Pt2D> {
         return newVertices;
     }
 
-    public Set<Pt2Df> getIntersectionPoints(AbstractShape s) {
+    public Set<Pt2Df> getIntersectionPoints45(AbstractShape s) {
         Set<Pt2Df> points = new HashSet<>();
         // intersect all lines
         for (Line l1 : getEdges()) {
             for (Line l2 : s.getEdges()) {
-                Pt2Df p = l1.getIntersectionPoint(l2);
+                Pt2Df p = l1.getIntersectionPoint45(l2);
                 if (p != null) {
                     if (l1.boundingBoxContains(p) &&
                         l2.boundingBoxContains(p))
@@ -103,12 +117,64 @@ public abstract class AbstractShape implements Iterable<Pt2D> {
             }
             // make sure not to miss any intersecting vertices of collinear lines etc
             for (Pt2D p : s)
-                if (l1.contains(p))
+                if (l1.contains45(p))
                     points.add(p.toFloat());
         }
         return points;
     }
+    
+    public boolean intersects45IgnoreSharedVertices(Shape45 s) {
+        Set<Pt2Df> ipts = getIntersectionPoints45(s);
+        
+        if (ipts.size() == 0)
+            return false;
 
+        // check each intersection point against vertices
+        for (Pt2Df p : ipts) {
+            if (!containsVertex(p)) return true;
+            if (!s.containsVertex(p)) return true;
+        }
+        
+        return false;
+    }
+
+    public Set<Pt2Df> getIntersectionPoints45(Line ln) {
+        Set<Pt2Df> points = new HashSet<>();
+        // intersect all lines
+        for (Line e : getEdges()) {
+            Pt2Df p = e.getIntersectionPoint45(ln);
+            if (p != null) {
+                if (e.boundingBoxContains(p) &&
+                    ln.boundingBoxContains(p))
+                    points.add(p);
+            }
+            // make sure not to miss any intersecting vertices of collinear lines etc
+            if (ln.contains45(e.start()))
+                points.add(e.start().toFloat());
+            if (ln.contains45(e.end()))
+                points.add(e.end().toFloat());
+        }
+        return points;
+    }
+    
+    public boolean intersects45IgnoreSharedVertices(Line ln) {
+        Set<Pt2Df> ipts = getIntersectionPoints45(ln);
+        
+        if (ipts.size() == 0)
+            return false;
+
+        // check each intersection point against vertices
+        for (Pt2Df p : ipts) {
+            if (!containsVertex(p))
+                return true;
+            if (!ln.start().equalsValue(p) &&
+                !ln.end().equalsValue(p))
+                return true;
+        }
+        
+        return false;
+    }
+    
     
 
     /*--------------------------- DIAGNOSTIC ---------------------------*/

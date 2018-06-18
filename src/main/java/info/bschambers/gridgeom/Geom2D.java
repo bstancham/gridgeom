@@ -77,8 +77,20 @@ public class Geom2D {
         return angleAB - angleBC;
     }
 
+    public static boolean isLeftTurn(Pt2D a, Pt2D b, Pt2D c) {
+        return angleTurned(a, b, c) > 0;
+    }
+
+    public static boolean isRightTurn(Pt2D a, Pt2D b, Pt2D c) {
+        return angleTurned(a, b, c) < 0;
+    }
+
     public static double lineAngle(Pt2Df start, Pt2Df end) {
         return lineAngle(start.x(), start.y(), end.x(), end.y());
+    }
+    
+    public static double lineAngle(Pt2D start, Pt2D end) {
+        return lineAngle(start.toFloat(), end.toFloat());
     }
     
     public static double lineAngle(Line ln) {
@@ -193,6 +205,14 @@ public class Geom2D {
         return false;
     }
 
+    public static boolean collinear(Pt2D a, Pt2D b, Pt2D c) {
+
+        return lineAngle(a, b) == lineAngle(a, c);
+        
+        // return pointIsOnLine(new Line(a, b), c);
+
+    }
+    
     // /**
     //  * TODO: IMPLEMENT FULLY...
     //  */

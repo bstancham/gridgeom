@@ -49,7 +49,7 @@ public class Shape45Test {
         expected.add(new Pt2Df(5.0f, 3.0f));
         expected.add(new Pt2Df(4.0f, 6.0f));
 
-        Set<Pt2Df> actual = rect1.getIntersectionPoints(rect2);
+        Set<Pt2Df> actual = rect1.getIntersectionPoints45(rect2);
         assertEquals(2, actual.size());
         // assertTrue(expected.equals(actual));
         assertEquals(expected, actual);
@@ -59,7 +59,7 @@ public class Shape45Test {
         rect2 = rect2.shift(1, 3);
         expected = new HashSet<>();
         expected.add(new Pt2Df(5, 6));
-        assertEquals(expected, rect1.getIntersectionPoints(rect2));
+        assertEquals(expected, rect1.getIntersectionPoints45(rect2));
 
         // intersection point should still be found for any point on line, even
         // if it's one that produces null in Line.getIntersectionPoint
@@ -82,7 +82,7 @@ public class Shape45Test {
         expected.add(new Pt2Df(3, 4));
         expected.add(new Pt2Df(3, 6));
         expected.add(new Pt2Df(3, 7));
-        assertEquals(expected, rect3.getIntersectionPoints(rect4));
+        assertEquals(expected, rect3.getIntersectionPoints45(rect4));
         
     }
     

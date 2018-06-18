@@ -1,5 +1,9 @@
 package info.bschambers.gridgeom;
 
+/**
+ * <p>Immutable data type representing a line with {@code float}
+ * co-ordinates.</p>
+ */
 public class Linef {
 
     private Pt2Df start;
@@ -20,44 +24,48 @@ public class Linef {
     
     /*--------------------------- ACCESSORS ----------------------------*/
 
-    public Pt2Df start() { return start; }
-    public Pt2Df end()   { return end; }
+    public Pt2Df start()  { return start; }
+    public Pt2Df end()    { return end; }
 
-    public float startX()     { return start.x(); }
-    public float startY()     { return start.y(); }
+    public float startX() { return start.x(); }
+    public float startY() { return start.y(); }
 
-    public float endX()       { return end.x(); }
-    public float endY()       { return end.y(); }
-
-    /** May return a negative number. */
-    public float distX() { return end.x() - start.x(); }
+    public float endX()   { return end.x(); }
+    public float endY()   { return end.y(); }
 
     /** May return a negative number. */
-    public float distY() { return end.y() - start.y(); }
+    public float distX() {
+        return end.x() - start.x();
+    }
+
+    /** May return a negative number. */
+    public float distY() {
+        return end.y() - start.y();
+    }
 
     /**
-     * The slope part of the line equation:
-     * Y = (slope * X) + intercept
+     * <p>The slope part of the line equation:<br/>
+     * {@code Y = (slope * X) + intercept}</p>
      *
-     * SPECIAL CASES...
-     * ... SEE DOCUMENTATION for Pt2D.slopeTo()...
+     * <p>SPECIAL CASES:</p>
+     * <p>See documentation for {@link Pt2Df#slopeTo}...</p>
      */
     public float slope() {
-        if (slope == null) slope = start.slopeTo(end);
+        if (slope == null)
+            slope = start.slopeTo(end);
         return slope;
     }
 
     /**
-     * The intercept part of the line equation:
-     * Y = (slope * X) + intercept
+     * <p>The intercept part of the line equation:<br/>
+     * {@code Y = (slope * X) + intercept}</p>
      *
-     * This is equivalent the Y co-ordinate of the point where the
-     * line crosses the X axis (where X = 0).
-     *
-     *
+     * <p>This is equivalent the Y co-ordinate of the point where the line
+     * crosses the X axis (where X = 0).</p>
      */
     public float intercept() {
-        if (intercept == null) intercept = startY() - startX() * slope();
+        if (intercept == null)
+            intercept = startY() - startX() * slope();
         return intercept;
     }
 
@@ -91,9 +99,12 @@ public class Linef {
     }
 
     /**
+     * <p>Guaranteed to return exact results if both lines are 45-compliant -
+     * otherwise returns {@code null}.</p>
+     *
      * <p>WARNING: returns {@code null} if either line is not 45-compliant!</p>
      */
-    public Pt2Df getIntersectionPoint(Linef l) {
+    public Pt2Df getIntersectionPoint45(Linef l) {
 
         if (isHoriz()) {
             if (l.isHoriz()) {
@@ -130,15 +141,15 @@ public class Linef {
         if (isDiag45()) {
             
             if (l.isVert() || l.isHoriz())
-                return l.getIntersectionPoint(this);
+                return l.getIntersectionPoint45(this);
 
             if (l.isDiag45()) {
 
                 // both are diag
                 if (isDiag45Positive() && l.isDiag45Negative())
-                    return getIntersectionPointPosNeg(l);
+                    return getIntersectionPointPosNeg45(l);
                 else if (isDiag45Negative() && l.isDiag45Positive())
-                    return l.getIntersectionPointPosNeg(this);
+                    return l.getIntersectionPointPosNeg45(this);
             }
         }
         
@@ -166,7 +177,7 @@ public class Linef {
         return 0;
     }
 
-    private Pt2Df getIntersectionPointPosNeg(Linef l) {
+    private Pt2Df getIntersectionPointPosNeg45(Linef l) {
                     
         float thisConst = getDiagYConst();
         float thatConst = l.getDiagYConst();
@@ -208,11 +219,11 @@ public class Linef {
             p.y() <= Math.max(start.y(), end.y());
     }
 
-    public boolean contains(Pt2D p) {
-        return contains(p.toFloat());
+    public boolean contains45(Pt2D p) {
+        return contains45(p.toFloat());
     }
     
-    public boolean contains(Pt2Df p) {
+    public boolean contains45(Pt2Df p) {
         if (boundingBoxContains(p)) {
             if (isHoriz() || isVert())
                 return true;
@@ -224,8 +235,8 @@ public class Linef {
         return false;
     }
 
-    public boolean intersects(Linef l) {
-        Pt2Df p = getIntersectionPoint(l);
+    public boolean intersects45(Linef l) {
+        Pt2Df p = getIntersectionPoint45(l);
         if (p == null)
             return false;
         else

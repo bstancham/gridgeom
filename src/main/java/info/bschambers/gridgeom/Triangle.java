@@ -34,5 +34,21 @@ public class Triangle extends AbstractShape {
         return new Pt2Df((a().x() + b().x() + c().x()) / 3.0f,
                          (a().y() + b().y() + c().y()) / 3.0f);
     }
-    
+
+    @Override
+    public boolean isCWWinding() {
+        return !isDegenerate() &&
+            Geom2D.isRightTurn(a(), b(), c());
+    }
+
+    @Override
+    public boolean isCCWWinding() {
+        return !isDegenerate() &&
+            Geom2D.isLeftTurn(a(), b(), c());
+    }
+
+    public boolean isDegenerate() {
+        return Geom2D.collinear(a(), b(), c());
+    }
+
 }

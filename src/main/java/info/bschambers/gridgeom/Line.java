@@ -1,7 +1,7 @@
 package info.bschambers.gridgeom;
 
 /**
- * <p>Immutable data type...</p>
+ * <p>Immutable data type representing a line with {@code int} co-ordinates.</p>
  */
 public class Line {
 
@@ -28,24 +28,29 @@ public class Line {
     public Pt2D start() { return start; }
     public Pt2D end()   { return end; }
 
-    public int startX()     { return start.x(); }
-    public int startY()     { return start.y(); }
+    public int startX() { return start.x(); }
+    public int startY() { return start.y(); }
 
-    public int endX()       { return end.x(); }
-    public int endY()       { return end.y(); }
-
-    /** May return a negative number. */
-    public int distX() { return end.x() - start.x(); }
+    public int endX()   { return end.x(); }
+    public int endY()   { return end.y(); }
 
     /** May return a negative number. */
-    public int distY() { return end.y() - start.y(); }
+    public int distX() {
+        return end.x() - start.x();
+    }
+
+    /** May return a negative number. */
+    public int distY() {
+        return end.y() - start.y();
+    }
 
 
 
     /*---------------------------- GEOMETRY ----------------------------*/
 
     public double length() {
-        if (length == null) length = Geom2D.dist(start, end);
+        if (length == null)
+            length = Geom2D.dist(start, end);
         return length;
     }
     
@@ -53,33 +58,34 @@ public class Line {
      * @return Angle of the line in radians.
      */
     public double angle() {
-        if (angle == null) angle = Geom2D.lineAngle(this);
+        if (angle == null)
+            angle = Geom2D.lineAngle(this);
         return angle;
     }
 
     /**
-     * The slope part of the line equation:
-     * Y = (slope * X) + intercept
+     * <p>The slope part of the line equation:<br/>
+     * {@code Y = (slope * X) + intercept}</p>
      *
-     * SPECIAL CASES...
-     * ... SEE DOCUMENTATION for Pt2D.slopeTo()...
+     * <p>SPECIAL CASES:</p>
+     * <p>... see documentation for {@link Pt2D#slopeTo}</p>
      */
     public double slope() {
-        if (slope == null) slope = start.slopeTo(end);
+        if (slope == null)
+            slope = start.slopeTo(end);
         return slope;
     }
 
     /**
-     * The intercept part of the line equation:
-     * Y = (slope * X) + intercept
+     * <p>The intercept part of the line equation:<br/>
+     * {@code Y = (slope * X) + intercept}</p>
      *
-     * This is equivalent the Y co-ordinate of the point where the
-     * line crosses the X axis (where X = 0).
-     *
-     *
+     * <p>This is equivalent the Y co-ordinate of the point where the line
+     * crosses the X axis (where X = 0).</p>
      */
     public double intercept() {
-        if (intercept == null) intercept = startY() - startX() * slope();
+        if (intercept == null)
+            intercept = startY() - startX() * slope();
         return intercept;
     }
 
@@ -117,10 +123,34 @@ public class Line {
     }
 
     /**
-     * <p>WARNING: returns {@code null} if either line is not 45-compliant!</p>
+     * <p>WARNING: returns {@code null} if lines are parallel, or if either line
+     * is degenerate.</p>
      */
     public Pt2Df getIntersectionPoint(Line l) {
-        return toFloat().getIntersectionPoint(l.toFloat());
+
+        // test for degenerate lines and for parallel condition
+        if (isDegenerate() || l.isDegenerate() ||
+            slope() == l.slope())
+            return null;
+
+        // check for vertical line
+        if (isVert())
+            return new Pt2Df(startX(),
+                             (float) ((l.slope() * startX()) + l.intercept()));
+        if (l.isVert())
+            return new Pt2Df(l.startX(),
+                             (float) ((slope() * l.startX()) + intercept()));
+
+        double x = -(intercept() - l.intercept()) / (slope() - l.slope());
+        double y = (slope() * x) + intercept();
+        return new Pt2Df((float) x, (float) y);
+    }
+
+    /**
+     * <p>WARNING: returns {@code null} if either line is not 45-compliant!</p>
+     */
+    public Pt2Df getIntersectionPoint45(Line l) {
+        return toFloat().getIntersectionPoint45(l.toFloat());
     }
 
     /**
@@ -151,23 +181,14 @@ public class Line {
     /**
      * <p>WARNING: only works if line is 45-compliant.</p>
      */
-    public boolean contains(Pt2D p) {
-        return contains(p.toFloat());
-        // if (boundingBoxContains(p)) {
-        //     if (isHoriz() || isVert())
-        //         return true;
-        //     if (isDiag45()) {
-        //         return Geom2D.distAbs(p.x(), start.x())
-        //             == Geom2D.distAbs(p.y(), start.y());
-        //     }
-        // }
-        // return false;
+    public boolean contains45(Pt2D p) {
+        return contains45(p.toFloat());
     }
     
     /**
      * <p>WARNING: only works if line is 45-compliant.</p>
      */
-    public boolean contains(Pt2Df p) {
+    public boolean contains45(Pt2Df p) {
         if (boundingBoxContains(p)) {
             if (isHoriz() | isVert())
                 return true;
@@ -183,10 +204,16 @@ public class Line {
     
     /*----------------------- LINE INTERSECTION ------------------------*/
 
-    /**
-     * <p>NOTE: won't work unless both lines are 45-compliant!</p>
-     */
-    public static boolean linesIntersect45(Line l1, Line l2) {
+    public static boolean linesIntersect(Line l1, Line l2) {
+
+        Pt2Df p = l1.getIntersectionPoint(l2);
+        if (p == null)
+            return false;
+
+        return l1.boundingBoxContains(p) && l2.boundingBoxContains(p);
+    }
+    
+    public static boolean linesIntersectIgnoreSharedEnds(Line l1, Line l2) {
         Pt2Df p = l1.getIntersectionPoint(l2);
         if (p == null)
             return false;
@@ -195,7 +222,48 @@ public class Line {
         boolean endPt2 = l2.start.equalsValue(p) || l2.end.equalsValue(p);
         boolean sharedEnd = endPt1 && endPt2;
 
-        return !sharedEnd && l1.contains(p) && l2.contains(p);
+        return !sharedEnd &&
+            l1.boundingBoxContains(p) && l2.boundingBoxContains(p);
     }
     
+    /**
+     * <p>NOTE: won't work unless both lines are 45-compliant!</p>
+     */
+    public static boolean linesIntersect45(Line l1, Line l2) {
+        Pt2Df p = l1.getIntersectionPoint45(l2);
+        if (p == null)
+            return false;
+
+        return l1.contains45(p) && l2.contains45(p);
+    }
+    
+    /**
+     * <p>NOTE: won't work unless both lines are 45-compliant!</p>
+     */
+    public static boolean linesIntersect45IgnoreSharedEnds(Line l1, Line l2) {
+        Pt2Df p = l1.getIntersectionPoint45(l2);
+        if (p == null)
+            return false;
+
+        boolean endPt1 = l1.start.equalsValue(p) || l1.end.equalsValue(p);
+        boolean endPt2 = l2.start.equalsValue(p) || l2.end.equalsValue(p);
+        boolean sharedEnd = endPt1 && endPt2;
+
+        return !sharedEnd && l1.contains45(p) && l2.contains45(p);
+    }
+
+    /**
+     * <p>NOTE: won't work unless both lines are 45-compliant!</p>
+     */
+    public static boolean linesIntersect45IgnoreEnds(Line l1, Line l2) {
+        Pt2Df p = l1.getIntersectionPoint45(l2);
+        if (p == null)
+            return false;
+
+        boolean endPt = l1.start.equalsValue(p) || l1.end.equalsValue(p)
+                     || l2.start.equalsValue(p) || l2.end.equalsValue(p);
+
+        return !endPt && l1.contains45(p) && l2.contains45(p);
+    }
+
 }

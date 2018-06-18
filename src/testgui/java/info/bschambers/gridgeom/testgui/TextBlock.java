@@ -74,6 +74,12 @@ public class TextBlock {
     }
 
     public void addIfElse(boolean test,
+                          Color colIfTrue, Color colIfFalse,
+                          String text) {
+        addIfElse(test, colIfTrue, text, colIfFalse, text);
+    }
+    
+    public void addIfElse(boolean test,
                           Color colIfTrue, String textIfTrue,
                           Color colIfFalse, String textIfFalse) {
         if (test)

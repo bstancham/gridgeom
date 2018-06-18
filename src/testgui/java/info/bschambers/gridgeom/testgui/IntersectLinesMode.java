@@ -86,21 +86,49 @@ public class IntersectLinesMode extends CanvasMode {
         
         paintKbdCursor(g);
 
-        Pt2Df iPt = l1.getIntersectionPoint(l2);
-        if (iPt != null) {
+        Pt2Df ip = l1.getIntersectionPoint(l2);
+        if (ip != null) {
+            g.setColor(Color.RED);
+            gfx().crosshairs(g, ip, 20);
+        }
+        Pt2Df ip45 = l1.getIntersectionPoint45(l2);
+        if (ip45 != null) {
             g.setColor(Color.YELLOW);
-            gfx().crosshairs(g, iPt, 14);
+            gfx().crosshairs(g, ip45, 14);
         }
 
         infoBlock.clear();
-        infoBlock.addIfElse(iPt == null,
-                            Color.RED, "INTERSECTION POINT: " + iPt,
-                            Color.GREEN, "INTERSECTION POINT: " + iPt);
+        
         addLineInfoString(infoBlock, "LINE 1", l1);
         addLineInfoString(infoBlock, "LINE 2", l2);
+
+        infoBlock.addIfElse(ip == null, Color.RED, Color.GREEN,
+                            "INTERSECTION-POINT:    " + ip);
+        infoBlock.addIfElse(ip45 == null, Color.RED, Color.GREEN,
+                            "INTERSECTION-POINT-45: " + ip45);
+        
+        infoBlock.addSeparator(Color.GRAY);
+        boolean test = Line.linesIntersect(l1, l2);
+        infoBlock.addIfElse(test, Color.GREEN, Color.RED,
+                            "INTERSECTS: " + test);
+        test = Line.linesIntersectIgnoreSharedEnds(l1, l2);
+        infoBlock.addIfElse(test, Color.GREEN, Color.RED,
+                            "INTERSECTS: (ignore shared ends)" + test);
+        infoBlock.addSeparator(Color.GRAY);
+        test = Line.linesIntersect45(l1, l2);
+        infoBlock.addIfElse(test, Color.GREEN, Color.RED,
+                            "INTERSECTS-45: " + test);
+        test = Line.linesIntersect45IgnoreSharedEnds(l1, l2);
+        infoBlock.addIfElse(test, Color.GREEN, Color.RED,
+                            "INTERSECTS-45: (ignore shared ends): " + test);
+        test = Line.linesIntersect45IgnoreEnds(l1, l2);
+        infoBlock.addIfElse(test, Color.GREEN, Color.RED,
+                            "INTERSECTS-45: (ignore ends): " + test);
+        
+        infoBlock.addSeparator(Color.GRAY);
         infoBlock.add(infoColor, "INSIDE LINE...");
-        addContainsString(infoBlock, "LINE 1", l1, iPt);
-        addContainsString(infoBlock, "LINE 2", l2, iPt);
+        addContainsString(infoBlock, "LINE 1", l1, ip45);
+        addContainsString(infoBlock, "LINE 2", l2, ip45);
         infoBlock.paint(g);
     }
 
@@ -111,7 +139,7 @@ public class IntersectLinesMode extends CanvasMode {
         String str = title + ": start" + l.start() + " end" + l.end() + angle;
         tb.addIfElse(l.isDegenerate(),
                      Color.RED, str,
-                     infoColor, str);
+                     Color.CYAN, str);
     }
 
     private void addContainsString(TextBlock tb, String title, Line l, Pt2Df p) {

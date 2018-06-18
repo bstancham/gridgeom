@@ -60,7 +60,7 @@ public class ShapeGroup implements Iterable<Shape45> {
             for (Shape45 s1 : shapes)
                 for (Shape45 s2 : shapes)
                     if (s1 != s2)
-                        if (s1.intersectsIgnoreSharedVertices(s2))
+                        if (s1.intersects45IgnoreSharedVertices(s2))
                             valid = false;
 
             // top-level shapes must not be illegally nested
@@ -445,17 +445,17 @@ public class ShapeGroup implements Iterable<Shape45> {
         return new Shape45(subs, s.copyVertices());
     }
     
-    public ShapeGroup subtract(ShapeGroup sg) {
+    public ShapeGroup subtract45(ShapeGroup sg) {
         ShapeGroup output = this;
         for (Shape45 s : sg)
-            output = output.subtract(s);
+            output = output.subtract45(s);
         return output;
     }
 
-    public ShapeGroup subtract(Shape45 s) {
+    public ShapeGroup subtract45(Shape45 s) {
         List<Shape45> output = new ArrayList<>();
         for (Shape45 sub : shapes)
-            output.addAll(sub.subtract(s));
+            output.addAll(sub.subtract45(s));
         return new ShapeGroup(output.toArray(new Shape45[output.size()]));
     }
 
@@ -479,11 +479,11 @@ public class ShapeGroup implements Iterable<Shape45> {
         }
     }
 
-    public Set<Pt2Df> getIntersectionPoints(ShapeGroup gs) {
+    public Set<Pt2Df> getIntersectionPoints45(ShapeGroup gs) {
         Set<Pt2Df> points = new HashSet<>();
         for (Shape45 s1 : shapes) {
             for (Shape45 s2 : gs.shapes) {
-                points.addAll(s1.getIntersectionPoints(s2));
+                points.addAll(s1.getIntersectionPoints45(s2));
             }
         }
         return points;

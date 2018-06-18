@@ -203,20 +203,6 @@ public class Shape45 extends AbstractShape {
         return -1;
     }    
     
-    public boolean containsVertex(Pt2D v) {
-        for (Pt2D vv : this)
-            if (v.equals(vv))
-                return true;
-        return false;
-    }
-    
-    public boolean containsVertex(Pt2Df v) {
-        for (Pt2D vv : this)
-            if (vv.equalsValue(v))
-                return true;
-        return false;
-    }
-    
     public Box2D getBoundingBox() {
         if (boundingBox == null)
             makeBoundingBox();
@@ -309,7 +295,7 @@ public class Shape45 extends AbstractShape {
             for (Shape45 sub1 : subShapes)
                 for (Shape45 sub2 : subShapes)
                     if (sub1 != sub2)
-                        if (sub1.intersectsIgnoreSharedVertices(sub2))
+                        if (sub1.intersects45IgnoreSharedVertices(sub2))
                             return false;
 
             if (!sub.isValid()) return false;
@@ -336,7 +322,7 @@ public class Shape45 extends AbstractShape {
         for (Line edge1 : edges) {
             for (Line edge2 : edges) {
                 if (edge1 != edge2) {
-                    if (Line.linesIntersect45(edge1, edge2))
+                    if (Line.linesIntersect45IgnoreSharedEnds(edge1, edge2))
                         num++;
                 }
             }
@@ -344,21 +330,6 @@ public class Shape45 extends AbstractShape {
         return num;
     }
 
-    public boolean intersectsIgnoreSharedVertices(Shape45 s) {
-        Set<Pt2Df> ipts = getIntersectionPoints(s);
-        
-        if (ipts.size() == 0)
-            return false;
-
-        // check each intersection point against vertices
-        for (Pt2Df p : ipts) {
-            if (!containsVertex(p)) return true;
-            if (!s.containsVertex(p)) return true;
-        }
-        
-        return false;
-    }
-    
     /**
      * @return True, if shape complies with the 45 degree rule, i.e. every angle
      * is either divisible by 45 degrees or is zero.
@@ -394,14 +365,127 @@ public class Shape45 extends AbstractShape {
     
     private void triangulate() {
         triangulateConvexSimple();
+        // triangulateEarClipping();
     }
-    
+
+    /**
+     * <p>Works for convex shapes with no sub-shapes and no zero-degree
+     * angles.</p>
+     */
     private void triangulateConvexSimple() {
         triangles = new Triangle[getNumVertices() - 2];
         for (int i = 0; i < triangles.length; i++) {
             triangles[i] = new Triangle(getVertex(0),
                                         getVertex(i + 1),
                                         getVertex(i + 2));
+        }
+    }
+
+    /**
+     * <p>Works for any shape which has no sub-shapes.</p>
+     */
+    private void triangulateEarClipping() {
+        new EarClippingTriangulator();
+    }
+
+    private class EarClippingTriangulator {
+        
+        private boolean[] used = new boolean[getNumVertices()];
+        private int a = 0;
+        private int b = 0;
+        private int c = 0;
+        private boolean kill = false;
+
+        public EarClippingTriangulator() {
+            List<Triangle> tris = new ArrayList<>();
+
+            while (numRemaining() >= 3
+                   && !kill) {
+
+                System.out.format("a=%s, b=%s, c=%s --- %s triangles --- remaining: %s\n",
+                                  a, b, c, tris.size(), remainString());
+
+                // get next triangle
+                b = nextIndex(a);
+                c = nextIndex(b);
+                Triangle t = new Triangle(getVertex(a),
+                                          getVertex(b),
+                                          getVertex(c));
+                
+                if (!triangleIntersectsShape() &&
+                    t.isCCWWinding()) {
+                    tris.add(t);
+                    used[b] = true;
+                } else {
+                    // move start point to next index
+                    a = b;
+                }
+
+            }
+
+            System.out.println("made " + tris.size() + " triangles");
+            triangles = tris.toArray(new Triangle[tris.size()]);
+        }
+
+        private String remainString() {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < used.length; i++) {
+                if (used[i])
+                    sb.append(". |");
+                else
+                    sb.append(i + " |");
+            }
+            return sb.toString();
+        }
+
+        private int numRemaining() {
+            int count = 0;
+            for (Boolean bool : used)
+                if (!bool)
+                    count++;
+            return count;
+        }
+
+        private int nextIndex(int i) {
+            i++;
+            if (i >= used.length) {
+                i = 0;
+                kill = true;
+            }
+            while (used[i]) {
+                i++;
+                if (i >= used.length) {
+                    i = 0;
+                    kill = true;
+                }
+            }
+            return i;
+        }
+
+        private boolean triangleIntersectsShape() {
+            return edgeIntersectsShape(a, b) ||
+                   edgeIntersectsShape(b, c) ||
+                   edgeIntersectsShape(c, a);
+        }
+
+        private boolean edgeIntersectsShape(int i1, int i2) {
+            if (contingentIndices(i1, i2))
+                return false;
+
+            Line ln = new Line(getVertex(i1), getVertex(i2));
+            if (intersects45IgnoreSharedVertices(ln))
+                return true;
+                
+            return false;
+        }
+
+        private boolean contingentIndices(int i1, int i2) {
+            if (i1 < i2 && i1 == i2 - 1)
+                return true;
+            if (i1 == getNumVertices() - 1 &&
+                i2 == 0)
+                return true;
+            return false;
         }
     }
     
@@ -680,7 +764,7 @@ public class Shape45 extends AbstractShape {
         return new Shape45(newSubs, newVerts);
     }
 
-    public List<Shape45> subtract(Shape45 s) {
+    public List<Shape45> subtract45(Shape45 s) {
 
         // get edges
         List<Line> homeLines = new ArrayList<>(); //getEdges());
@@ -699,7 +783,7 @@ public class Shape45 extends AbstractShape {
             List<IPt> linePoints = new ArrayList<>();
             for (int ai = 0; ai < awayLines.size(); ai++) {
                 Line l2 = awayLines.get(ai);
-                Pt2Df p = l1.getIntersectionPoint(l2);
+                Pt2Df p = l1.getIntersectionPoint45(l2);
                 if (p != null) {
                     if (l1.boundingBoxContains(p) &&
                         l2.boundingBoxContains(p))
@@ -708,7 +792,7 @@ public class Shape45 extends AbstractShape {
                     // line has failed to make an intersection point...
                     // ... probably means that it's paralell...
                     // ... so, check that neither end is situated on home-line
-                    if (l1.contains(l2.start())) {
+                    if (l1.contains45(l2.start())) {
                         iPoints.add(new IPt(l2.start().toFloat(), hi, ai));
                     }
                 }
