@@ -62,7 +62,7 @@ public class ShapeGroup implements Iterable<Shape45> {
             for (Shape45 s1 : shapes)
                 for (Shape45 s2 : shapes)
                     if (s1 != s2)
-                        if (s1.getOutline().intersects45IgnoreSharedVertices(s2.getOutline()))
+                        if (s1.getOutline().intersectsIgnoreSharedVertices45(s2.getOutline()))
                             valid = false;
 
             // top-level shapes must not be illegally nested
@@ -129,7 +129,7 @@ public class ShapeGroup implements Iterable<Shape45> {
         int count = 0;
         for (int i = 0; i < shapes.length; i++) {
             if (index - count < shapes[i].getTotalNumVertices())
-                return shapes[i].getVertex(index - count);
+                return shapes[i].getVertexRecursive(index - count);
             count += shapes[i].getTotalNumVertices();
         }
         // index is out of range
@@ -162,6 +162,22 @@ public class ShapeGroup implements Iterable<Shape45> {
         return -1;
     }    
 
+    /**
+     * @return The index of the first vertex of the sub-shape at {@code index},
+     * or {@code -1} if {@code index} is out of range.
+     */
+    public int getVertexIndexForSubShapeIndex(int index) {
+        int count = 0;
+        for (int i = 0; i < shapes.length; i++) {
+            if (index < shapes[i].getNumShapesRecursive())
+                return count + shapes[i].getVertexIndexForSubShapeIndex(index);
+            index -= shapes[i].getNumShapesRecursive();
+            count += shapes[i].getTotalNumVertices();
+        }
+        // index is out of range
+        return -1;
+    }
+    
     public int getNestedDepth() {
         return nestedDepth;
     }

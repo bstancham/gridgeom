@@ -85,16 +85,29 @@ public class Shape45 {
         return outline;
     }
 
+    /**
+     * @return The number of shapes in the local sub-shape array. To get the
+     * total number of nested shapes use {@link Shape45#getNumShapesRecursive
+     * getNumShapesRecursive}.
+     */
     public int getNumSubShapes() {
         return subShapes.length;
     }
 
+    /**
+     * @return The shape at {@code index} in the local sub-shapes array. To get
+     * a deeper-nested shape use {@link Shape45#getSubShapeRecursive
+     * getSubShapeRecursive}.
+     * 
+     * @throws ArrayIndexOutOfBoundsException If {@code index} is out of bounds.
+     */
     public Shape45 getSubShape(int index) {
         return subShapes[index];
     }
 
     /**
      * <p>TODO: unit test</p>
+     * @return A copy of the sub-shapes array.
      */
     public Shape45[] getSubShapes() {
         // make protective copy of sub-shapes before returning it
@@ -103,6 +116,10 @@ public class Shape45 {
         return subs;
     }
 
+    /**
+     * @return The total number of nested shapes, including {@code this} (i.e
+     * the outline) and all nested shapes to any depth.
+     */
     public int getNumShapesRecursive() {
         int count = 1;
         for (Shape45 s : subShapes)
@@ -110,6 +127,10 @@ public class Shape45 {
         return count;
     }
 
+    /**
+     * @return The shape at {@code index}. Index {@code 0} refers to the top
+     * level i.e. the whole shape.
+     */
     public Shape45 getSubShapeRecursive(int index) {
         // index 0 refers to the whole shape
         if (index == 0)
@@ -157,7 +178,7 @@ public class Shape45 {
      *
      * @return vertex at index, or {@code null} if index is out of range.
      */
-    public Pt2D getVertex(int index) {
+    public Pt2D getVertexRecursive(int index) {
         // index in outline
         if (index < getNumOutlineVertices())
             return outline.getVertex(index);
@@ -165,28 +186,29 @@ public class Shape45 {
         int count = getNumOutlineVertices();
         for (int i = 0; i < subShapes.length; i++) {
             if (index - count < subShapes[i].getTotalNumVertices())
-                return subShapes[i].getVertex(index - count);
+                return subShapes[i].getVertexRecursive(index - count);
             count += subShapes[i].getTotalNumVertices();
         }
         // index is out of range
         return null;
     }
 
+    /**
+     * @return The shape whose outline contains vertex-index {@code index}, or
+     * {@code null} if {@code index} is out of range.
+     */
     public Shape45 getSubShapeForVertexIndex(int index) {
-
-        // is vertex index in outline?
+        // index in outline?
         if (index < getNumOutlineVertices()) {
             return this;
         }
-
-        // 
+        // index in sub-shape?
         index -= getNumOutlineVertices();
         for (int i = 0; i < subShapes.length; i++) {
             if (index < subShapes[i].getTotalNumVertices())
                 return subShapes[i].getSubShapeForVertexIndex(index);
             index -= subShapes[i].getTotalNumVertices();
         }
-        
         // index is out of range
         return null;
     }    
@@ -196,12 +218,11 @@ public class Shape45 {
      * index}, or {@code -1} if {@code index} is out of range.
      */
     public int getSubShapeIndexForVertexIndex(int index) {
-
-        // is vertex index in outline?
+        // vertex index in outline?
         if (index < getNumOutlineVertices()) {
             return 0;
         }
-
+        // vertex index in sub-shape?
         index -= getNumOutlineVertices();
         int count = 1;
         for (int i = 0; i < subShapes.length; i++) {
@@ -210,10 +231,30 @@ public class Shape45 {
             index -= subShapes[i].getTotalNumVertices();
             count += subShapes[i].getNumShapesRecursive();
         }
-        
         // index is out of range
         return -1;
     }    
+    
+    /**
+     * @return The index of the first vertex of the sub-shape at {@code index},
+     * or {@code -1} if {@code index} is out of range.
+     */
+    public int getVertexIndexForSubShapeIndex(int index) {
+        if (index == 0)
+            // return first vertex of outline
+            return 0;
+        // vertex index in sub-shape?
+        index--;
+        int count = getNumOutlineVertices();
+        for (int i = 0; i < subShapes.length; i++) {
+            if (index < subShapes[i].getNumShapesRecursive())
+                return count + subShapes[i].getVertexIndexForSubShapeIndex(index);
+            index -= subShapes[i].getNumShapesRecursive();
+            count += subShapes[i].getTotalNumVertices();
+        }
+        // index is out of range
+        return -1;
+    }
     
     public Box2D getBoundingBox() {
         if (boundingBox == null)
@@ -233,14 +274,14 @@ public class Shape45 {
         return boundingBox.centerY;
     }
 
-    public void makeBoundingBox() {
-        Pt2D v = getVertex(0);
+    private void makeBoundingBox() {
+        Pt2D v = getOutline().getVertex(0);
         int lowX  = v.x();
         int highX = v.x();
         int lowY  = v.y();
         int highY = v.y();
         for (int i = 1; i < getNumOutlineVertices(); i++) {
-            v = getVertex(i);
+            v = getOutline().getVertex(i);
             if (v.x() < lowX)  lowX  = v.x();
             if (v.x() > highX) highX = v.x();
             if (v.y() < lowY)  lowY  = v.y();
@@ -306,7 +347,7 @@ public class Shape45 {
             // SUB-SHAPES MAY NOT INTERSECT ONE-ANOTHER
             for (Shape45 sub2 : subShapes)
                 if (sub != sub2)
-                    if (sub.getOutline().intersects45IgnoreSharedVertices(sub2.getOutline()))
+                    if (sub.getOutline().intersectsIgnoreSharedVertices45(sub2.getOutline()))
                         return false;
 
             if (!sub.isValid()) return false;
@@ -350,148 +391,6 @@ public class Shape45 {
         return nestedDepth;
     }
 
-
-
-    /*------------------------- TRIANGULATION --------------------------*/
-
-    public int getNumTriangles() {
-        if (triangles == null)
-            triangulate();
-        return triangles.length;
-    }
-
-    public Triangle getTriangle(int index) {
-        if (triangles == null)
-            triangulate();
-        return triangles[index];
-    }
-    
-    private void triangulate() {
-        triangulateConvexSimple();
-        // triangulateEarClipping();
-    }
-
-    /**
-     * <p>Works for convex shapes with no sub-shapes and no zero-degree
-     * angles.</p>
-     */
-    private void triangulateConvexSimple() {
-        triangles = new Triangle[getNumOutlineVertices() - 2];
-        for (int i = 0; i < triangles.length; i++) {
-            triangles[i] = new Triangle(getVertex(0),
-                                        getVertex(i + 1),
-                                        getVertex(i + 2));
-        }
-    }
-
-    /**
-     * <p>Works for any shape which has no sub-shapes.</p>
-     */
-    private void triangulateEarClipping() {
-        new EarClippingTriangulator();
-    }
-
-    private class EarClippingTriangulator {
-        
-        private boolean[] used = new boolean[getNumOutlineVertices()];
-        private int a = 0;
-        private int b = 0;
-        private int c = 0;
-        private boolean kill = false;
-
-        public EarClippingTriangulator() {
-            List<Triangle> tris = new ArrayList<>();
-
-            while (numRemaining() >= 3
-                   && !kill) {
-
-                System.out.format("a=%s, b=%s, c=%s --- %s triangles --- remaining: %s\n",
-                                  a, b, c, tris.size(), remainString());
-
-                // get next triangle
-                b = nextIndex(a);
-                c = nextIndex(b);
-                Triangle t = new Triangle(getVertex(a),
-                                          getVertex(b),
-                                          getVertex(c));
-                
-                if (!triangleIntersectsShape() &&
-                    t.isCCWWinding()) {
-                    tris.add(t);
-                    used[b] = true;
-                } else {
-                    // move start point to next index
-                    a = b;
-                }
-
-            }
-
-            System.out.println("made " + tris.size() + " triangles");
-            triangles = tris.toArray(new Triangle[tris.size()]);
-        }
-
-        private String remainString() {
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < used.length; i++) {
-                if (used[i])
-                    sb.append(". |");
-                else
-                    sb.append(i + " |");
-            }
-            return sb.toString();
-        }
-
-        private int numRemaining() {
-            int count = 0;
-            for (Boolean bool : used)
-                if (!bool)
-                    count++;
-            return count;
-        }
-
-        private int nextIndex(int i) {
-            i++;
-            if (i >= used.length) {
-                i = 0;
-                kill = true;
-            }
-            while (used[i]) {
-                i++;
-                if (i >= used.length) {
-                    i = 0;
-                    kill = true;
-                }
-            }
-            return i;
-        }
-
-        private boolean triangleIntersectsShape() {
-            return edgeIntersectsShape(a, b) ||
-                   edgeIntersectsShape(b, c) ||
-                   edgeIntersectsShape(c, a);
-        }
-
-        private boolean edgeIntersectsShape(int i1, int i2) {
-            if (contingentIndices(i1, i2))
-                return false;
-
-            Line ln = new Line(getVertex(i1), getVertex(i2));
-            if (getOutline().intersects45IgnoreSharedVertices(ln))
-                return true;
-                
-            return false;
-        }
-
-        private boolean contingentIndices(int i1, int i2) {
-            if (i1 < i2 && i1 == i2 - 1)
-                return true;
-            if (i1 == getNumOutlineVertices() - 1 &&
-                i2 == 0)
-                return true;
-            return false;
-        }
-    }
-    
 
 
     /*------------- TRANSFORMATIONS (return a new Shape45) -------------*/
@@ -766,6 +665,281 @@ public class Shape45 {
         return new Shape45(newSubs, outline.rotate90(centerX, centerY));
     }
 
+
+    
+    /*------------------------- TRIANGULATION --------------------------*/
+
+    public int getNumTriangles() {
+        if (triangles == null)
+            triangulate();
+        return triangles.length;
+    }
+
+    public Triangle getTriangle(int index) {
+        if (triangles == null)
+            triangulate();
+        return triangles[index];
+    }
+    
+    private void triangulate() {
+        // triangles = triangulateConvexSimple(this);
+        if (subShapes.length == 0)
+            triangles = triangulateEarClipping(this);
+        else
+            triangles = triangulateDivideAndConquer(this);
+    }
+
+    /**
+     * <p>Works for convex shapes with no sub-shapes and no zero-degree
+     * angles.</p>
+     */
+    private Triangle[] triangulateConvexSimple(Shape45 s) {
+        Triangle[] tris = new Triangle[s.getNumOutlineVertices() - 2];
+        for (int i = 0; i < tris.length; i++) {
+            tris[i] = new Triangle(s.getOutline().getVertex(0),
+                                   s.getOutline().getVertex(i + 1),
+                                   s.getOutline().getVertex(i + 2));
+        }
+        return tris;
+    }
+
+    /**
+     * <p>Works for any shape which has no sub-shapes.</p>
+     */
+    private Triangle[] triangulateEarClipping(Shape45 s) {
+        return new EarClippingTriangulator(s).getTriangles();
+    }
+
+    /**
+     * <p>Works for any valid shape.</p>
+     */
+    private Triangle[] triangulateDivideAndConquer(Shape45 s) {
+        return new DivideAndConquerTriangulator(s).getTriangles();
+    }
+
+    private class EarClippingTriangulator {
+        
+        private boolean[] used;
+        private int a = 0;
+        private int b = 0;
+        private int c = 0;
+        
+        private boolean kill = false;
+        private int totalCount = 0;
+
+        private List<Triangle> tris = new ArrayList<>();
+        
+        public EarClippingTriangulator(Shape45 s) {
+            used = new boolean[s.getNumOutlineVertices()];
+            
+            while (numRemaining() >= 3
+                   && !kill) {
+
+                System.out.format("a=%s, b=%s, c=%s --- %s triangles --- remaining: %s\n",
+                                  a, b, c, tris.size(), remainString());
+
+                // get next triangle
+                b = nextIndex(a);
+                c = nextIndex(b);
+                Triangle t = new Triangle(s.getOutline().getVertex(a),
+                                          s.getOutline().getVertex(b),
+                                          s.getOutline().getVertex(c));
+                
+                if (!triangleIntersectsShape(s) &&
+                    t.isCCWWinding()) {
+                    tris.add(t);
+                    used[b] = true;
+                } else {
+                    // move start point to next index
+                    a = b;
+                }
+            }
+
+            System.out.println("made " + tris.size() + " triangles");
+            // triangles = tris.toArray(new Triangle[tris.size()]);
+        }
+
+        public Triangle[] getTriangles() {
+            return tris.toArray(new Triangle[tris.size()]);
+        }
+        
+        private String remainString() {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < used.length; i++) {
+                if (used[i])
+                    sb.append(". |");
+                else
+                    sb.append(i + " |");
+            }
+            return sb.toString();
+        }
+
+        private int numRemaining() {
+            int count = 0;
+            for (Boolean bool : used)
+                if (!bool)
+                    count++;
+            return count;
+        }
+
+        private int nextIndex(int i) {
+            i++;
+            totalCount++;
+            if (i >= used.length) {
+                i = 0;
+            }
+            while (used[i]) {
+                i++;
+                if (i >= used.length) {
+                    i = 0;
+                }
+            }
+
+            // prevent infinite loop during testing
+            if (totalCount > used.length * 5)
+                kill = true;
+            
+            return i;
+        }
+
+        private boolean triangleIntersectsShape(Shape45 s) {
+            return edgeIntersectsShape(s, a, b) ||
+                   edgeIntersectsShape(s, b, c) ||
+                   edgeIntersectsShape(s, c, a);
+        }
+
+        private boolean edgeIntersectsShape(Shape45 s, int i1, int i2) {
+
+            if (contingentIndices(s, i1, i2))
+                return false;
+
+            Line ln = new Line(s.getOutline().getVertex(i1),
+                               s.getOutline().getVertex(i2));
+            if (s.getOutline().intersectsIgnoreSharedVertices(ln))
+                return true;
+                
+            return false;
+        }
+
+        private boolean contingentIndices(Shape45 s, int i1, int i2) {
+            if (i1 < i2 && i1 == i2 - 1)
+                return true;
+            if (i1 == s.getNumOutlineVertices() - 1 &&
+                i2 == 0)
+                return true;
+            return false;
+        }
+    }
+
+    private class DivideAndConquerTriangulator {
+
+        private List<Triangle> tris = new ArrayList<>();
+
+        public DivideAndConquerTriangulator(Shape45 shape) {
+            System.out.println("DivideAndConquerTriangulator");
+            Shape45[] workingSubShapes = shape.subShapes;
+
+            // TOP-LEVEL
+            
+            for (int i = 0; i < workingSubShapes.length; i++) {
+                Shape45 sub = workingSubShapes[i];
+                System.out.println("make bridge to subshape " + i);
+                shape = makeBridge(shape, sub);
+            }
+
+            System.out.println("outline after division:");
+            for (Pt2D p : shape.getOutline())
+                System.out.println(p);
+            
+            for (Triangle t : triangulateEarClipping(shape))
+                tris.add(t);
+
+            // NESTED SHAPES
+
+            for (Shape45 hole : workingSubShapes)
+                for (Shape45 nested : hole.subShapes)
+                    for (Triangle t : triangulateDivideAndConquer(nested))
+                        tris.add(t);
+        }
+
+        public Triangle[] getTriangles() {
+            return tris.toArray(new Triangle[tris.size()]);
+        }
+
+        /**
+         * <p>Makes bridge and adds two triangles...</p>
+         * <p>Returns the merged shape...</p>
+         */
+        private Shape45 makeBridge(Shape45 shape, Shape45 sub) {
+
+            // two vertices in outline and
+            finding:
+            for (int oi = 0; oi < shape.getNumOutlineVertices(); oi++) {
+                // two vertices in subshape
+                for (int si = 0; si < sub.getNumOutlineVertices(); si++) {
+
+                    Pt2D vo1 = shape.getOutline().getVertex(oi);
+                    Pt2D vo2 = shape.getOutline().getVertexWrapped(oi + 1);
+                    Pt2D vs1 = sub.getOutline().getVertex(si);
+                    Pt2D vs2 = sub.getOutline().getVertexWrapped(si + 1);
+
+                    if (!bridgeLinesIntersect(shape, vo1, vo2, vs1, vs2)) {
+                        // add two new triangles
+                        tris.add(new Triangle(vo1, vo2, vs1));
+                        tris.add(new Triangle(vo1, vs1, vs2));
+
+                        // bridge gap and merge subshape
+
+                        // outline vertices
+                        Pt2D[] newVerts = new Pt2D[shape.getNumOutlineVertices() +
+                                                   sub.getNumOutlineVertices()];
+                        int index = 0;
+                        for (int i = 0; i < shape.getNumOutlineVertices(); i++) {
+                            newVerts[index++] = shape.getOutline().getVertexWrapped(oi + 1 + i);
+                        }
+                        for (int i = 0; i < sub.getNumOutlineVertices(); i++) {
+                            newVerts[index++] = sub.getOutline().getVertexWrapped(si + 1 + i);
+                        }
+                        
+                        // subshapes
+                        Shape45[] newSubs = new Shape45[shape.getNumSubShapes() - 1];
+                        index = 0;
+                        for (Shape45 ss : shape.subShapes)
+                            if (ss != sub)
+                                newSubs[index++] = ss;
+
+                        shape = new Shape45(newSubs, newVerts);
+                        break finding;
+                    }
+                }
+            }
+
+            return shape;
+        }
+
+        private boolean bridgeLinesIntersect(Shape45 shape,
+                                             Pt2D o1, Pt2D o2, Pt2D s1, Pt2D s2) {
+            return bridgeLineIntersects(shape, o2, s1) ||
+                   bridgeLineIntersects(shape, s1, o1) ||
+                   bridgeLineIntersects(shape, s2, o1);
+        }
+
+        private boolean bridgeLineIntersects(Shape45 shape, Pt2D a, Pt2D b) {
+            Line ln = new Line(a, b);
+            if (shape.getOutline().intersectsIgnoreSharedVertices(ln))
+                return true;
+            for (Shape45 sub : shape.subShapes)
+                if (sub.getOutline().intersectsIgnoreSharedVertices(ln))
+                    return true;
+            return false;
+        }
+        
+    }
+
+
+    
+    /*----------------------- BOOLEAN MODELLING ------------------------*/
+
     public List<Shape45> subtract45(Shape45 s) {
 
         // get edges
@@ -874,7 +1048,7 @@ public class Shape45 {
         }
         
         /**
-         * @return negative num = less than, zero = equal, positive num =
+         * @return Negative num = less than, zero = equal, positive num =
          * greater than.  Returns a negative integer, zero, or a positive
          * integer as the first argument is less than, equal to, or greater than
          * the second.
@@ -894,7 +1068,7 @@ public class Shape45 {
     /*------------------------------ MISC ------------------------------*/
 
     /**
-     * <p>Makes souce code for shape which can be pasted directly into program
+     * <p>Makes source code for shape which can be pasted directly into program
      * code.</p>
      */
     public String getSourceCode() {
@@ -914,7 +1088,7 @@ public class Shape45 {
 
         // OUTLINE
         for (int i = 0; i < outline.getNumVertices(); i++) {
-            Pt2D v = getVertex(i);
+            Pt2D v = outline.getVertex(i);
             sb.append("new Pt2D(" + v.x() + ", " + v.y() + ")");
             if (i < outline.getNumVertices() - 1)
                 sb.append(",\n");
