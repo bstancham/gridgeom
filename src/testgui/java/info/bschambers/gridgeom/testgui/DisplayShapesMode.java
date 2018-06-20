@@ -1,6 +1,7 @@
 package info.bschambers.gridgeom.testgui;
 
 import java.util.Set;
+import java.util.Iterator;
 import java.awt.Graphics;
 import java.awt.Color;
 import java.awt.event.KeyEvent;
@@ -14,7 +15,10 @@ public class DisplayShapesMode extends CanvasMode {
     private boolean showGrid = true;
     private boolean showMultiple = true;
     private boolean showDiagnostics = true;
+    
     private boolean showTriangulation = false;
+    private boolean showTriangulationNumbers = false;
+    private boolean showTriangulationFill = false;
 
     // vertex editing
     private boolean vertexMode = false;
@@ -243,7 +247,25 @@ public class DisplayShapesMode extends CanvasMode {
     private void paintSlot(Graphics g, ShapeSlot ss) {
 
         if (showTriangulation) {
-            gfx().numberedTriangles(g, ss.shape(), Color.LIGHT_GRAY, Color.RED);
+            // fill?
+            if (showTriangulationFill) {
+                Iterator<Triangle> iter = ss.shape().triangleIterator();
+                while (iter.hasNext()) {
+                    g.setColor(Gfx.randomColor());
+                    gfx().fillPolygon(g, iter.next());
+                }
+            }
+            // outline
+            Iterator<Triangle> iter = ss.shape().triangleIterator();
+            while (iter.hasNext()) {
+                g.setColor(Color.LIGHT_GRAY);
+                gfx().polygon(g, iter.next());
+            }
+            // numbers
+            if (showTriangulationNumbers) {
+                g.setColor(Color.RED);
+                gfx().triangleNumbers(g, ss.shape());
+            }
         }
 
         if (subShapeMode) {
@@ -327,7 +349,21 @@ public class DisplayShapesMode extends CanvasMode {
     }
     
     private void toggleShowTriangulation() {
-        showTriangulation = !showTriangulation;
+        if (!showTriangulation) {
+            showTriangulation = true;
+            showTriangulationNumbers = true;
+            showTriangulationFill = false;
+        } else if (!showTriangulationFill) {
+            showTriangulationFill = true;
+        } else if (showTriangulationNumbers) {
+            showTriangulationNumbers = false;
+        } else {
+            showTriangulation = false;
+            showTriangulationNumbers = false;
+            showTriangulationFill = false;
+        }
+        
+        // showTriangulation = !showTriangulation;
     }
     
     private void toggleShowDiagnostics() {

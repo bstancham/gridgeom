@@ -185,6 +185,16 @@ public class Gfx {
         arrow(g, lastVertex.transpose(x, y), poly.getVertex(0).transpose(x, y));
     }
 
+    public void fillPolygon(Graphics g, Polygon poly) {
+        int[] xs = new int[poly.getNumVertices()];
+        int[] ys = new int[poly.getNumVertices()];
+        for (int i = 0; i < poly.getNumVertices(); i++) {
+            xs[i] = getX(poly.getVertex(i).x());
+            ys[i] = getY(poly.getVertex(i).y());
+        }
+        g.fillPolygon(xs, ys, poly.getNumVertices());
+    }
+
     public void shapeNestedDepthFade(Graphics g, ShapeGroup sg, Color c) {
         for (Shape45 s : sg)
             shapeNestedDepthFade(g, s, c);
@@ -204,27 +214,16 @@ public class Gfx {
         for (Shape45 sub : s.getSubShapes())
             shapeNestedDepthFade(g, sub, subColor);
     }
-    
-    public void triangles(Graphics g, ShapeGroup shape) {
-        Iterator<Triangle> iter = shape.triangleIterator();
-        while (iter.hasNext())
-            polygon(g, iter.next());
-    }
 
-    public void numberedTriangles(Graphics g, ShapeGroup shape,
-                                  Color triColor, Color textColor) {
-        Iterator<Triangle> iter = shape.triangleIterator();
+    public void triangleNumbers(Graphics g, ShapeGroup sg) {
         int count = 1;
+        Iterator<Triangle> iter = sg.triangleIterator();
         while (iter.hasNext()) {
-            Triangle tri = iter.next();
-            g.setColor(triColor);
-            polygon(g, tri);
             // get centroid
-            Pt2Df centroid = tri.centroid();
+            Pt2Df centroid = iter.next().centroid();
             int x = getX(centroid.x());
             int y = getY(centroid.y());
             // paint number
-            g.setColor(textColor);
             g.drawString("" + count, x, y);
             count++;
         }
