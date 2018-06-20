@@ -14,7 +14,7 @@ import static info.bschambers.gridgeom.Geom2D.WindingDir;
 public class Polygon implements Iterable<Pt2D> {
 
     private Pt2D[] vertices;
-    private Double sumAnglesDegrees = null;
+    protected WindingDir winding = null;
 
     public Polygon(Pt2D ... vertices) {
         this.vertices = vertices;
@@ -26,8 +26,12 @@ public class Polygon implements Iterable<Pt2D> {
         return vertices[index];
     }
 
-    public Pt2D getVertexWrapped(int index) {
-        return vertices[wrapIndex(index)];
+    public Pt2D getVertexWrapped(int i) {
+        if (i < 0)
+            return vertices[vertices.length + i % vertices.length];
+        if (i >= vertices.length)
+            return vertices[i % vertices.length];
+        return vertices[i];
     }
 
     public boolean containsVertex(Pt2D v) {
@@ -54,52 +58,9 @@ public class Polygon implements Iterable<Pt2D> {
     public Line[] getEdges() {
         Line[] edges = new Line[getNumVertices()];
         for (int i = 0; i < getNumVertices(); i++) {
-            edges[i] = new Line(vertices[i], vertices[wrapIndex(i + 1)]);
+            edges[i] = new Line(vertices[i], getVertexWrapped(i + 1));
         }
         return edges;
-    }
-
-    public Polygon shift(int x, int y) {
-        Pt2D[] newVertices = new Pt2D[vertices.length];
-        for (int i = 0; i < vertices.length; i++)
-            newVertices[i] = vertices[i].transpose(x, y);
-        return new Polygon(newVertices);
-    }
-
-    public Polygon reverseWinding() {
-        Pt2D[] newVertices = new Pt2D[vertices.length];
-        for (int i = 0; i < vertices.length; i++)
-            newVertices[i] = vertices[vertices.length - 1 - i];
-        return new Polygon(newVertices);
-    }
-
-    public Polygon reflectX(int center) {
-        Pt2D[] newVertices = new Pt2D[vertices.length];
-        for (int i = 0; i < vertices.length; i++)
-            newVertices[i] = vertices[i].reflectX(center);
-        return new Polygon(newVertices);
-    }
-
-    public Polygon reflectY(int center) {
-        Pt2D[] newVertices = new Pt2D[vertices.length];
-        for (int i = 0; i < vertices.length; i++)
-            newVertices[i] = vertices[i].reflectY(center);
-        return new Polygon(newVertices);
-    }
-
-    public Polygon rotate90(int centerX, int centerY) {
-        Pt2D[] newVertices = new Pt2D[vertices.length];
-        for (int i = 0; i < vertices.length; i++)
-            newVertices[i] = vertices[i].rotate90(centerX, centerY);
-        return new Polygon(newVertices);
-    }
-
-    public Polygon rotateVertexOrder(int amt) {
-        Pt2D[] newVertices = new Pt2D[vertices.length];
-        for (int i = 0; i < vertices.length; i++) {
-            newVertices[i] = vertices[wrapIndex(i + amt)];
-        }
-        return new Polygon(newVertices);
     }
 
     
@@ -239,41 +200,41 @@ public class Polygon implements Iterable<Pt2D> {
     }
 
     /**
+     * @return The angle in radians of the corner at vertex index {@code i}.
      * @throws IndexOutOfBoundsException if number of vertices in shape is less
      * than three.
      */
-    public double getAngleAtVertex(int index) {
-        return Geom2D.angleTurned(vertices[wrapIndex(index - 1)].toFloat(),
-                                  vertices[wrapIndex(index)].toFloat(),
-                                  vertices[wrapIndex(index + 1)].toFloat());
-    }
-    
-    /**
-     * @return The sum of the angles of the outline, in radians.
-     */
-    public double getSumAngles() {
-        if (sumAnglesDegrees == null) {
-            sumAnglesDegrees = 0.0;
-            for (int i = 0; i < getNumVertices(); i++)
-                sumAnglesDegrees += getAngleAtVertex(i);
-        }
-        return sumAnglesDegrees;
+    public double getAngleAtVertex(int i) {
+        return Geom2D.angleTurned(getVertexWrapped(i - 1).toFloat(),
+                                  getVertexWrapped(i).toFloat(),
+                                  getVertexWrapped(i + 1).toFloat());
     }
 
     public WindingDir getWindingDir() {
-        if (isCWWinding())
-            return WindingDir.CW;
-        if (isCCWWinding())
-            return WindingDir.CCW;
-        return WindingDir.INDETERMINATE;
+        if (winding == null) {
+            // count left & right turns
+            int left = 0;
+            int right = 0;
+            for (int i = 0; i < getNumVertices(); i++) {
+                int dir = Geom2D.turnDirection(getVertexWrapped(i - 1),
+                                               getVertexWrapped(i),
+                                               getVertexWrapped(i + 1));
+                if (dir < 0) left++;
+                if (dir > 0) right++;
+            }
+            winding = WindingDir.INDETERMINATE;
+            if (left > right) winding = WindingDir.CCW;
+            if (right > left) winding = WindingDir.CW;
+        }
+        return winding;
     }
     
     public boolean isCWWinding() {
-        return getSumAngles() == -(Math.PI * 2);
+        return getWindingDir() == WindingDir.CW;
     }
     
     public boolean isCCWWinding() {
-        return getSumAngles() == Math.PI * 2;
+        return getWindingDir() == WindingDir.CCW;
     }
 
     public int getNumDuplicateVertices() {
@@ -308,14 +269,48 @@ public class Polygon implements Iterable<Pt2D> {
 
     
 
-    /*-------------------- PRIVATE UTILITY METHODS ---------------------*/
+    /*-------------- TRANSFORMATIONS (return new Polygon) --------------*/
 
-    private int wrapIndex(int i) {
-        if (i < 0)
-            return vertices.length + i % vertices.length;
-        if (i >= vertices.length)
-            return i % vertices.length;
-        return i;
+    public Polygon shift(int x, int y) {
+        Pt2D[] newVertices = new Pt2D[vertices.length];
+        for (int i = 0; i < vertices.length; i++)
+            newVertices[i] = vertices[i].transpose(x, y);
+        return new Polygon(newVertices);
+    }
+
+    public Polygon reverseWinding() {
+        Pt2D[] newVertices = new Pt2D[vertices.length];
+        for (int i = 0; i < vertices.length; i++)
+            newVertices[i] = vertices[vertices.length - 1 - i];
+        return new Polygon(newVertices);
+    }
+
+    public Polygon reflectX(int center) {
+        Pt2D[] newVertices = new Pt2D[vertices.length];
+        for (int i = 0; i < vertices.length; i++)
+            newVertices[i] = vertices[i].reflectX(center);
+        return new Polygon(newVertices);
+    }
+
+    public Polygon reflectY(int center) {
+        Pt2D[] newVertices = new Pt2D[vertices.length];
+        for (int i = 0; i < vertices.length; i++)
+            newVertices[i] = vertices[i].reflectY(center);
+        return new Polygon(newVertices);
+    }
+
+    public Polygon rotate90(int centerX, int centerY) {
+        Pt2D[] newVertices = new Pt2D[vertices.length];
+        for (int i = 0; i < vertices.length; i++)
+            newVertices[i] = vertices[i].rotate90(centerX, centerY);
+        return new Polygon(newVertices);
+    }
+
+    public Polygon rotateVertexOrder(int amt) {
+        Pt2D[] newVertices = new Pt2D[vertices.length];
+        for (int i = 0; i < vertices.length; i++)
+            newVertices[i] = getVertexWrapped(i + amt);
+        return new Polygon(newVertices);
     }
 
 }

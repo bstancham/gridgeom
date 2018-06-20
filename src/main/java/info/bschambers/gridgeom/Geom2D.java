@@ -77,12 +77,20 @@ public class Geom2D {
         return angleAB - angleBC;
     }
 
-    public static boolean isLeftTurn(Pt2D a, Pt2D b, Pt2D c) {
-        return angleTurned(a, b, c) > 0;
+    public static int turnDirection(Pt2D a, Pt2D b, Pt2D c) {
+        return turnDirection(a.toFloat(), b.toFloat(), c.toFloat());
     }
-
-    public static boolean isRightTurn(Pt2D a, Pt2D b, Pt2D c) {
-        return angleTurned(a, b, c) < 0;
+    
+    /**
+     * @return {@code -1} if turn direction is counter-clockwise (or left).<br/>
+     * {@code 1} if turn is clockwise (or right).<br/>
+     * {@code 0} if turn has angle of zero.
+     */
+    public static int turnDirection(Pt2Df a, Pt2Df b, Pt2Df c) {
+        double angle = angleTurned(a, b, c);
+        if (angle > 0) return -1;
+        if (angle < 0) return 1;
+        return 0;
     }
 
     public static double lineAngle(Pt2Df start, Pt2Df end) {

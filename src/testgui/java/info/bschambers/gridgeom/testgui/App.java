@@ -36,6 +36,7 @@ public class App {
             makeMultipleShapes(),
             makePerforatedShapes(),
             makeTrickyTriangulationShapes(),
+            makeTrickyOtherShapes(),
             makeFaultyShapes(),
         };
     }
@@ -46,9 +47,9 @@ public class App {
                             // CONVEX
         
                             new ShapeWrapper("triangle",
-                                             new Shape45(new Pt2D(0, 1),
-                                                         new Pt2D(3, 1),
-                                                         new Pt2D(0, 4))),
+                                             new ShapeGroup(new Shape45(new Pt2D(0, 0),
+                                                                        new Pt2D(3, 0),
+                                                                        new Pt2D(0, 3)))),
 
                             new ShapeWrapper("rectangle 3x5",
                                              new Shape45(new Pt2D(0, 0),
@@ -90,8 +91,8 @@ public class App {
                                                          new Pt2D(2, 6),
                                                          new Pt2D(2, 1),
                                                          new Pt2D(0, 1))),
-        
-                            new ShapeWrapper("non-convex (cross 1)",
+
+                            new ShapeWrapper("cross 1",
                                              new Shape45(new Pt2D(2, 0),
                                                          new Pt2D(4, 0),
                                                          new Pt2D(4, 2),
@@ -105,7 +106,7 @@ public class App {
                                                          new Pt2D(0, 2),
                                                          new Pt2D(2, 2))),
         
-                            new ShapeWrapper("non-convex (cross 2)",
+                            new ShapeWrapper("cross 2",
                                              new Shape45(new Pt2D(2, 0),
                                                          new Pt2D(3, 0),
                                                          new Pt2D(3, 3),
@@ -214,7 +215,7 @@ public class App {
                                                                         new Pt2D(3, 5),
                                                                         new Pt2D(0, 5)))),
 
-                            new ShapeWrapper("chequer board",
+                            new ShapeWrapper("shared vertices 1 (chequer board)",
                                              new ShapeGroup(new Shape45(new Pt2D(0, 0),
                                                                         new Pt2D(2, 0),
                                                                         new Pt2D(2, 2),
@@ -246,7 +247,45 @@ public class App {
                                                             new Shape45(new Pt2D(6, 6),
                                                                         new Pt2D(8, 6),
                                                                         new Pt2D(8, 8),
-                                                                        new Pt2D(6, 8))))
+                                                                        new Pt2D(6, 8)))),
+
+                            new ShapeWrapper("shared vertices 2",
+                                             new ShapeGroup(new Shape45(new Pt2D(0, 2),
+                                                                        new Pt2D(0, 0),
+                                                                        new Pt2D(3, 0),
+                                                                        new Pt2D(3, 3),
+                                                                        new Pt2D(2, 2)),
+                                                            new Shape45(new Pt2D(6, 0),
+                                                                        new Pt2D(6, 2),
+                                                                        new Pt2D(3, 5),
+                                                                        new Pt2D(0, 5),
+                                                                        new Pt2D(0, 3),
+                                                                        new Pt2D(3, 3)),
+                                                            new Shape45(new Pt2D(4, 5),
+                                                                        new Pt2D(6, 3),
+                                                                        new Pt2D(6, 4),
+                                                                        new Pt2D(4, 6),
+                                                                        new Pt2D(3, 6),
+                                                                        new Pt2D(1, 8),
+                                                                        new Pt2D(0, 8),
+                                                                        new Pt2D(0, 6),
+                                                                        new Pt2D(2, 6),
+                                                                        new Pt2D(3, 5)),
+                                                            new Shape45(new Pt2D(5, 6),
+                                                                        new Pt2D(6, 5),
+                                                                        new Pt2D(6, 6),
+                                                                        new Pt2D(5, 7),
+                                                                        new Pt2D(4, 7),
+                                                                        new Pt2D(3, 8),
+                                                                        new Pt2D(2, 8),
+                                                                        new Pt2D(4, 6)),
+                                                            new Shape45(new Pt2D(6, 7),
+                                                                        new Pt2D(6, 8),
+                                                                        new Pt2D(5, 8),
+                                                                        new Pt2D(5, 7)),
+                                                            new Shape45(new Pt2D(5, 0),
+                                                                        new Pt2D(4, 1),
+                                                                        new Pt2D(3, 0))))
 
                             );
     }
@@ -254,46 +293,6 @@ public class App {
     private static ShapeSet makePerforatedShapes() {
         return new ShapeSet("perforated",
 
-                            new ShapeWrapper("nested triangles 1",
-                                             new ShapeGroup(new Shape45(new Shape45(new Pt2D(1, 4),
-                                                                                    new Pt2D(4, 1),
-                                                                                    new Pt2D(1, 1)),
-                                                                        new Pt2D(0, 0),
-                                                                        new Pt2D(6, 0),
-                                                                        new Pt2D(0, 6)))),
-
-                            new ShapeWrapper("nested triangles 2",
-                                             new ShapeGroup(new Shape45(new Shape45(new Shape45(new Pt2D(2, 2),
-                                                                                                new Pt2D(5, 2),
-                                                                                                new Pt2D(2, 5)),
-                                                                                    new Pt2D(1, 7),
-                                                                                    new Pt2D(7, 1),
-                                                                                    new Pt2D(1, 1)),
-                                                                        new Pt2D(0, 0),
-                                                                        new Pt2D(9, 0),
-                                                                        new Pt2D(0, 9)))),
-
-                            new ShapeWrapper("nested triangles 3",
-                                             new ShapeGroup(new Shape45(new Shape45[] {
-                                                         new Shape45(new Shape45[] {
-                                                                 new Shape45(new Pt2D(16, 6),
-                                                                             new Pt2D(16, 9),
-                                                                             new Pt2D(13, 9)),
-                                                                 new Shape45(new Pt2D(15, 5),
-                                                                             new Pt2D(13, 7),
-                                                                             new Pt2D(13, 5)),
-                                                             },
-                                                             new Pt2D(12, 10),
-                                                             new Pt2D(21, 10),
-                                                             new Pt2D(12, 1)),
-                                                         new Shape45(new Pt2D(26, 3),
-                                                                     new Pt2D(28, 3),
-                                                                     new Pt2D(26, 1)),
-                                                     },
-                                                     new Pt2D(0, 0),
-                                                     new Pt2D(32, 0),
-                                                     new Pt2D(16, 16)))),
-                            
                             new ShapeWrapper("nested boxes 1",
                                              new Shape45(new Shape45(new Pt2D(1, 4),
                                                                      new Pt2D(1, 5),
@@ -341,22 +340,22 @@ public class App {
                                                      new Pt2D(0, 6)))),
 
                             new ShapeWrapper("nested boxes 4",
-                                             new ShapeGroup(new Shape45(new Shape45(new Shape45(new Shape45(new Pt2D(5, 10),
-                                                                                                            new Pt2D(8, 10),
-                                                                                                            new Pt2D(8, 5),
-                                                                                                            new Pt2D(5, 5)),
-                                                                                                new Pt2D(4, 4),
-                                                                                                new Pt2D(9, 4),
-                                                                                                new Pt2D(9, 11),
-                                                                                                new Pt2D(4, 11)),
-                                                                                    new Pt2D(3, 12),
-                                                                                    new Pt2D(10, 12),
-                                                                                    new Pt2D(10, 3),
-                                                                                    new Pt2D(3, 3)),
-                                                                        new Pt2D(2, 2),
-                                                                        new Pt2D(11, 2),
-                                                                        new Pt2D(11, 13),
-                                                                        new Pt2D(2, 13)))),
+                                             new ShapeGroup(new Shape45(new Shape45(new Shape45(new Shape45(new Pt2D(3, 8),
+                                                                                                            new Pt2D(6, 8),
+                                                                                                            new Pt2D(6, 3),
+                                                                                                            new Pt2D(3, 3)),
+                                                                                                new Pt2D(2, 2),
+                                                                                                new Pt2D(7, 2),
+                                                                                                new Pt2D(7, 9),
+                                                                                                new Pt2D(2, 9)),
+                                                                                    new Pt2D(1, 10),
+                                                                                    new Pt2D(8, 10),
+                                                                                    new Pt2D(8, 1),
+                                                                                    new Pt2D(1, 1)),
+                                                                        new Pt2D(0, 0),
+                                                                        new Pt2D(9, 0),
+                                                                        new Pt2D(9, 11),
+                                                                        new Pt2D(0, 11)))),
 
                             new ShapeWrapper("nested boxes 5",
                                              new ShapeGroup(new Shape45(new Shape45(new Shape45(new Shape45(new Pt2D(3, 4),
@@ -458,6 +457,27 @@ public class App {
                                                      new Pt2D(15, 8),
                                                      new Pt2D(2, 8),
                                                      new Pt2D(2, 2)))),
+                            
+                            new ShapeWrapper("nested triangles (3 levels)",
+                                             new ShapeGroup(new Shape45(new Shape45[] {
+                                                         new Shape45(new Shape45[] {
+                                                                 new Shape45(new Pt2D(16, 6),
+                                                                             new Pt2D(16, 9),
+                                                                             new Pt2D(13, 9)),
+                                                                 new Shape45(new Pt2D(15, 5),
+                                                                             new Pt2D(13, 7),
+                                                                             new Pt2D(13, 5)),
+                                                             },
+                                                             new Pt2D(12, 10),
+                                                             new Pt2D(21, 10),
+                                                             new Pt2D(12, 1)),
+                                                         new Shape45(new Pt2D(26, 3),
+                                                                     new Pt2D(28, 3),
+                                                                     new Pt2D(26, 1)),
+                                                     },
+                                                     new Pt2D(0, 0),
+                                                     new Pt2D(32, 0),
+                                                     new Pt2D(16, 16)))),
 
                             new ShapeWrapper("perforated (4 levels)",
                                              new ShapeGroup(new Shape45(new Shape45(new Shape45[] {
@@ -665,6 +685,27 @@ public class App {
                                                                         new Pt2D(2, 4),
                                                                         new Pt2D(2, 2)))),
 
+                            // NESTED TRIANGLES
+
+                            new ShapeWrapper("nested triangles 1",
+                                             new ShapeGroup(new Shape45(new Shape45(new Pt2D(1, 4),
+                                                                                    new Pt2D(4, 1),
+                                                                                    new Pt2D(1, 1)),
+                                                                        new Pt2D(0, 0),
+                                                                        new Pt2D(6, 0),
+                                                                        new Pt2D(0, 6)))),
+
+                            new ShapeWrapper("nested triangles 2",
+                                             new ShapeGroup(new Shape45(new Shape45(new Shape45(new Pt2D(2, 2),
+                                                                                                new Pt2D(5, 2),
+                                                                                                new Pt2D(2, 5)),
+                                                                                    new Pt2D(1, 7),
+                                                                                    new Pt2D(7, 1),
+                                                                                    new Pt2D(1, 1)),
+                                                                        new Pt2D(0, 0),
+                                                                        new Pt2D(9, 0),
+                                                                        new Pt2D(0, 9)))),
+
                             // HOLES WITH SHARED VERTICES
                             
                             new ShapeWrapper("holes with shared vertices (chequer board)",
@@ -710,14 +751,53 @@ public class App {
                             );
     }
     
+    private static ShapeSet makeTrickyOtherShapes() {
+        return new ShapeSet("tricky (other)",
+
+                            // WINDING PROBLEM WITH OLD (SUM-ANGLES) METHOD
+                            
+                            new ShapeWrapper("winding problem with old (sum-angles) method 1",
+                                             new ShapeGroup(new Shape45(new Pt2D(10, 5),
+                                                                        new Pt2D(10, 7),
+                                                                        new Pt2D(8, 7),
+                                                                        new Pt2D(8, 8),
+                                                                        new Pt2D(12, 8),
+                                                                        new Pt2D(12, 6),
+                                                                        new Pt2D(13, 6),
+                                                                        new Pt2D(13, 10),
+                                                                        new Pt2D(5, 10),
+                                                                        new Pt2D(0, 5),
+                                                                        new Pt2D(5, 0),
+                                                                        new Pt2D(7, 2),
+                                                                        new Pt2D(5, 4),
+                                                                        new Pt2D(5, 5)))),
+
+                            new ShapeWrapper("winding problem with old (sum-angles) method 2",
+                                             new ShapeGroup(new Shape45(new Pt2D(2, 1),
+                                                                        new Pt2D(6, 1),
+                                                                        new Pt2D(6, 5),
+                                                                        new Pt2D(6, 7),
+                                                                        new Pt2D(2, 7),
+                                                                        new Pt2D(0, 5),
+                                                                        new Pt2D(0, 2),
+                                                                        new Pt2D(0, 0),
+                                                                        new Pt2D(1, 1),
+                                                                        new Pt2D(1, 2),
+                                                                        new Pt2D(1, 3),
+                                                                        new Pt2D(1, 4),
+                                                                        new Pt2D(2, 5))))
+                            
+                            );
+    }
+    
     private static ShapeSet makeFaultyShapes() {
-        return new ShapeSet("faulty",
+        return new ShapeSet("faulty shapes",
 
                             new ShapeWrapper("triangle (bad winding)",
-                                             new Shape45(new Pt2D(0, 1),
-                                                         new Pt2D(0, 4),
-                                                         new Pt2D(3, 1))),
-
+                                             new ShapeGroup(new Shape45(new Pt2D(0, 0),
+                                                                        new Pt2D(0, 3),
+                                                                        new Pt2D(3, 0)))),
+                            
                             new ShapeWrapper("rectangle (bad winding)",
                                              new Shape45(new Pt2D(0, 0),
                                                          new Pt2D(0, 5),
@@ -732,7 +812,7 @@ public class App {
                                                          new Pt2D(6, 4),
                                                          new Pt2D(2, 0),
                                                          new Pt2D(1, 0))),
-                            
+
                             new ShapeWrapper("multiple (mixed winding)",
                                              new ShapeGroup(new Shape45(new Pt2D(0, 0),
                                                                         new Pt2D(3, 0),
@@ -743,7 +823,16 @@ public class App {
                                                                         new Pt2D(3, 5),
                                                                         new Pt2D(3, 3)))),
 
-                            new ShapeWrapper("cross (non-45 angle)",
+                            new ShapeWrapper("non-45 angle (convex)",
+                                             new ShapeGroup(new Shape45(new Pt2D(0, 3),
+                                                                        new Pt2D(1, 0),
+                                                                        new Pt2D(2, 0),
+                                                                        new Pt2D(6, 4),
+                                                                        new Pt2D(6, 6),
+                                                                        new Pt2D(2, 6),
+                                                                        new Pt2D(0, 4)))),
+                            
+                            new ShapeWrapper("non-45 angle (cross)",
                                              new Shape45(new Pt2D(2, 0),
                                                          new Pt2D(3, 0),
                                                          new Pt2D(3, 3),
@@ -757,14 +846,26 @@ public class App {
                                                          new Pt2D(0, 3),
                                                          new Pt2D(2, 3))),
 
+                            new ShapeWrapper("non-45 angles 3",
+                                             new ShapeGroup(new Shape45(new Pt2D(1, 1),
+                                                                        new Pt2D(2, 0),
+                                                                        new Pt2D(3, 4),
+                                                                        new Pt2D(7, 1),
+                                                                        new Pt2D(7, 4),
+                                                                        new Pt2D(8, 6),
+                                                                        new Pt2D(3, 7),
+                                                                        new Pt2D(6, 9),
+                                                                        new Pt2D(2, 10),
+                                                                        new Pt2D(0, 5)))),
+                            
                             new ShapeWrapper("top-level shapes intersect",
-                                             new ShapeGroup(new Shape45(new Pt2D(6, 4),
-                                                                        new Pt2D(9, 4),
-                                                                        new Pt2D(6, 7)),
-                                                            new Shape45(new Pt2D(9, 5),
-                                                                        new Pt2D(9, 10),
-                                                                        new Pt2D(7, 10),
-                                                                        new Pt2D(7, 5)))),
+                                             new ShapeGroup(new Shape45(new Pt2D(0, 0),
+                                                                        new Pt2D(3, 0),
+                                                                        new Pt2D(0, 3)),
+                                                            new Shape45(new Pt2D(3, 1),
+                                                                        new Pt2D(3, 6),
+                                                                        new Pt2D(1, 6),
+                                                                        new Pt2D(1, 1)))),
 
                             new ShapeWrapper("sub-shape intersects outline",
                                              new ShapeGroup(new Shape45(new Shape45[] {
@@ -794,22 +895,22 @@ public class App {
                                                      new Pt2D(13, 0),
                                                      new Pt2D(7, 6),
                                                      new Pt2D(1, 6)))),
-                            
+
                             new ShapeWrapper("sub-shapes intersect",
                                              new ShapeGroup(new Shape45(new Shape45[] {
-                                                         new Shape45(new Pt2D(7, 5),
-                                                                     new Pt2D(7, 7),
-                                                                     new Pt2D(10, 7),
-                                                                     new Pt2D(10, 5)),
-                                                         new Shape45(new Pt2D(9, 4),
-                                                                     new Pt2D(9, 8),
-                                                                     new Pt2D(11, 8),
-                                                                     new Pt2D(11, 4)),
+                                                         new Shape45(new Pt2D(1, 2),
+                                                                     new Pt2D(1, 4),
+                                                                     new Pt2D(4, 4),
+                                                                     new Pt2D(4, 2)),
+                                                         new Shape45(new Pt2D(3, 1),
+                                                                     new Pt2D(3, 5),
+                                                                     new Pt2D(5, 5),
+                                                                     new Pt2D(5, 1)),
                                                      },
-                                                     new Pt2D(6, 3),
-                                                     new Pt2D(12, 3),
-                                                     new Pt2D(12, 9),
-                                                     new Pt2D(6, 9)))),
+                                                     new Pt2D(0, 0),
+                                                     new Pt2D(6, 0),
+                                                     new Pt2D(6, 6),
+                                                     new Pt2D(0, 6)))),
 
                             new ShapeWrapper("self-intersecting outline",
                                              new ShapeGroup(new Shape45(new Pt2D(4, 0),

@@ -294,19 +294,7 @@ public class DisplayShapesMode extends CanvasMode {
                        Color.RED,  pad + "45 DEGREE RULE: FAILED");
             
         // WINDING DIRECTION
-        String str = "WINDING: ";
-        if (s.getOutline().isCCWWinding()) {
-            str += "CCW";
-        } else if (s.getOutline().isCWWinding()) {
-            str += "CW";
-            col = Color.PINK;
-        } else {
-            str += "unknown";
-            col = Color.RED;
-        }
-        text.add(col, pad + str
-                 + " --- sum of angles: " + Math.toDegrees(s.getOutline().getSumAngles())
-                 + " degrees (" + s.getOutline().getSumAngles() + ")");
+        addWindingDirText(text, s, pad);
 
         // DUPLICATE VERTICES
         int numDuplicates = s.getOutline().getNumDuplicateVertices();
@@ -328,6 +316,27 @@ public class DisplayShapesMode extends CanvasMode {
             addDiagnosticText(text, currentIndex, sub, label + " SUB-SHAPE " + n++, pad + "  ");
             currentIndex += sub.getNumShapesRecursive();
         }
+    }
+
+    private void addWindingDirText(TextBlock text, Shape45 s, String pad) {
+        // sum of angles
+        double sumAngles = 0.0;
+        for (int i = 0; i < s.getNumOutlineVertices(); i++)
+            sumAngles += s.getOutline().getAngleAtVertex(i);
+        // build text
+        Color col = textCol;
+        String str = "WINDING: ";
+        if (s.getOutline().isCCWWinding()) {
+            str += "CCW";
+        } else if (s.getOutline().isCWWinding()) {
+            str += "CW";
+            col = Color.PINK;
+        } else {
+            str += "unknown";
+            col = Color.RED;
+        }
+        text.add(col, pad + str
+                 + " --- sum of angles: " + Math.toDegrees(sumAngles) + " degrees");
     }
 
     @Override

@@ -4,6 +4,7 @@ import java.util.Set;
 import java.util.HashSet;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import static info.bschambers.gridgeom.Geom2D.WindingDir;
 
 public class PolygonTest {
 
@@ -64,6 +65,57 @@ public class PolygonTest {
         expected.add(new Pt2Df(3, 6));
         expected.add(new Pt2Df(3, 7));
         assertEquals(expected, rect3.getIntersectionPoints45(rect4));
+        
+    }
+
+    @Test
+    public void testWindingDir() {
+
+        // convex and 45-compliant
+        Polygon poly = new Polygon(new Pt2D(4, -2),
+                                   new Pt2D(5, -3),
+                                   new Pt2D(6, -3),
+                                   new Pt2D(10, 1),
+                                   new Pt2D(10, 3),
+                                   new Pt2D(6, 3),
+                                   new Pt2D(4, 1));
+        assertEquals(WindingDir.CCW, poly.getWindingDir());
+        assertEquals(WindingDir.CW, poly.reverseWinding().getWindingDir());
+
+        // convex and non-45-compliant
+
+        // non-convex
+
+        // non-convex and non-45-compliant
+        poly = new Polygon(new Pt2D(10, 5),
+                           new Pt2D(11, 4),
+                           new Pt2D(12, 8),
+                           new Pt2D(16, 5),
+                           new Pt2D(16, 8),
+                           new Pt2D(17, 10),
+                           new Pt2D(12, 11),
+                           new Pt2D(15, 13),
+                           new Pt2D(11, 14),
+                           new Pt2D(9, 9));
+        assertEquals(WindingDir.CCW, poly.getWindingDir());
+        assertEquals(WindingDir.CW, poly.reverseWinding().getWindingDir());
+
+        // this one failed with the old sum-of-angles based method
+        poly = new Polygon(new Pt2D(4, 9),
+                           new Pt2D(8, 9),
+                           new Pt2D(8, 13),
+                           new Pt2D(8, 15),
+                           new Pt2D(4, 15),
+                           new Pt2D(2, 13),
+                           new Pt2D(2, 10),
+                           new Pt2D(2, 8),
+                           new Pt2D(3, 9),
+                           new Pt2D(3, 10),
+                           new Pt2D(3, 11),
+                           new Pt2D(3, 12),
+                           new Pt2D(4, 13));
+        assertEquals(WindingDir.CCW, poly.getWindingDir());
+        assertEquals(WindingDir.CW, poly.reverseWinding().getWindingDir());
         
     }
     

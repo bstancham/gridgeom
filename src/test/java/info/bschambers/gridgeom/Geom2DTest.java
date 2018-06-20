@@ -25,18 +25,17 @@ public class Geom2DTest {
     }
 
     @Test
-    public void testAngleIsLeftOrRightTurn() {
+    public void testTurnDirection() {
         
         Pt2D p1 = new Pt2D(2, 1);
         Pt2D p2 = new Pt2D(6, 1);
         Pt2D p3 = new Pt2D(5, 5);
+        Pt2D p4 = new Pt2D(14, 17);
 
-        assertTrue(Geom2D.isLeftTurn(p1, p2, p3));
-        assertFalse(Geom2D.isRightTurn(p1, p2, p3));
-
-        assertTrue(Geom2D.isRightTurn(p1, p3, p2));
-        assertFalse(Geom2D.isLeftTurn(p1, p3, p2));
-
+        assertEquals(-1, Geom2D.turnDirection(p1, p2, p3)); // LEFT/CCW
+        assertEquals(1, Geom2D.turnDirection(p1, p3, p2)); // RIGHT/CW
+        assertEquals(0, Geom2D.turnDirection(p1, p3, p4)); // NO TURN
+        
     }
 
     @Test

@@ -1,9 +1,13 @@
 package info.bschambers.gridgeom;
 
+import static info.bschambers.gridgeom.Geom2D.WindingDir;
+
 /**
  * <p>Immutable data type representing a triangle with integer co-ordinates.</p>
  */
 public class Triangle extends Polygon {
+
+    private Boolean degenerate = null;
 
     public Triangle(Pt2D v1, Pt2D v2, Pt2D v3) {
         super(new Pt2D[] { v1, v2, v3 });
@@ -36,19 +40,26 @@ public class Triangle extends Polygon {
     }
 
     @Override
-    public boolean isCWWinding() {
-        return !isDegenerate() &&
-            Geom2D.isRightTurn(a(), b(), c());
-    }
-
-    @Override
-    public boolean isCCWWinding() {
-        return !isDegenerate() &&
-            Geom2D.isLeftTurn(a(), b(), c());
+    public WindingDir getWindingDir() {
+        if (winding == null) {
+            if (isDegenerate()) {
+                winding = WindingDir.INDETERMINATE;
+            } else {
+                int dir = Geom2D.turnDirection(a().toFloat(),
+                                               b().toFloat(),
+                                               c().toFloat());
+                if      (dir < 0) winding = WindingDir.CCW;
+                else if (dir > 0) winding = WindingDir.CW;
+                else              winding = WindingDir.INDETERMINATE;
+            }
+        }
+        return winding;
     }
 
     public boolean isDegenerate() {
-        return Geom2D.collinear(a(), b(), c());
+        if (degenerate == null)
+            degenerate = Geom2D.collinear(a(), b(), c());
+        return degenerate;
     }
 
 }
