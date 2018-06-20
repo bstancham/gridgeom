@@ -90,7 +90,13 @@ public class ShapeWrapper {
     
     /*----------------------------- VERTEX -----------------------------*/
 
-    public int vertexIndex() { return vertexIndex; }
+    public Pt2D getVertex() {
+        return modShape.getVertex(vertexIndex);
+    }
+    
+    public int vertexIndex() {
+        return vertexIndex;
+    }
 
     public void incrVertexIndex(int amount) {
         vertexIndex += amount;
@@ -100,12 +106,20 @@ public class ShapeWrapper {
             vertexIndex = 0;
     }
 
-    public Pt2D getVertex() {
-        return modShape.getVertex(vertexIndex);
-    }
-    
     /**
-     * Sets the current vertex.
+     * <p>Sets vertex index to the first vertex of the current
+     * working-sub-shape.</p>
+     */
+    public void setVertexIndexForSubShape() {
+        vertexIndex = getVertexIndexForSubShapeIndex();
+    }
+
+    public int getVertexIndexForSubShapeIndex() {
+        return modShape.getVertexIndexForSubShapeIndex(subShapeIndex);
+    }
+
+    /**
+     * <p>Sets the current working-vertex.</p>
      */
     public void setVertex(int x, int y) {
         modShape = modShape.setVertex(vertexIndex, x - xPos, y - yPos);
@@ -149,7 +163,13 @@ public class ShapeWrapper {
     
     /*--------------------------- SUB-SHAPE ----------------------------*/
 
-    public int subShapeIndex() { return subShapeIndex; }
+    public Shape45 getSubShape() {
+        return modShape.getShapeRecursive(subShapeIndex).shift(xPos, yPos);
+    }
+
+    public int subShapeIndex() {
+        return subShapeIndex;
+    }
 
     public void incrSubShapeIndex(int amount) {
         subShapeIndex += amount;
@@ -159,9 +179,13 @@ public class ShapeWrapper {
         else if (subShapeIndex >= shape().getNumShapesRecursive())
             subShapeIndex = 0;
     }
-
-    public Shape45 getSubShape() {
-        return modShape.getShapeRecursive(subShapeIndex).shift(xPos, yPos);
+    
+    /**
+     * <p>Sets sub-shape index to the sub-shape which contains the current
+     * working-vertex.</p>
+     */
+    public void setSubShapeIndexForVertex() {
+        subShapeIndex = getSubShapeIndexForVertexIndex();
     }
 
     public int getSubShapeIndexForVertexIndex() {

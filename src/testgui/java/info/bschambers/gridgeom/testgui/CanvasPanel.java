@@ -54,24 +54,6 @@ public class CanvasPanel extends JPanel {
                  () -> gfx.incrementScaling(-1),
                  () -> gfx.incrementScaling(1));
 
-        keys.add('u', 'i',
-                 () -> "prev/next shape-set (" + (1 + slot().shapeSetIndex()) +
-                 " of " + slot().numShapeSets() + " --> " + shapeSet().name() + ")",
-                 () -> previousShapeSet(),
-                 () -> nextShapeSet());
-
-        keys.add('o', 'p',
-                 () -> "prev/next shape (" + (1 + shapeSet().index()) +
-                 " of " + shapeSet().size() + " --> " + slot().wrapper().name() + ")",
-                 () -> previousShape(),
-                 () -> nextShape());
-    
-        if (numSlots > 1)
-            keys.add('S',
-                     () -> "switch shape-slot (" + (shapeSlotIndex + 1) +
-                     " of " + shapeSlots.length + ")",
-                     () -> switchShapeSlot());
-
         this.gfx.setScaling(29);
     }
 
@@ -106,15 +88,23 @@ public class CanvasPanel extends JPanel {
         return shapeSlots[shapeSlotIndex];
     }
 
+    public int shapeSlotIndex() {
+        return shapeSlotIndex;
+    }
+
+    public int numSlots() {
+        return shapeSlots.length;
+    }
+
     public ShapeSlot[] getShapeSlots() {
         return shapeSlots;
     }
 
-    protected ShapeSet shapeSet() {
+    public ShapeSet shapeSet() {
         return slot().shapeSet();
     }
 
-    private void switchShapeSlot() {
+    public void switchShapeSlot() {
         shapeSlotIndex++;
         if (shapeSlotIndex >= shapeSlots.length)
             shapeSlotIndex = 0;
@@ -122,19 +112,19 @@ public class CanvasPanel extends JPanel {
                                          slot().wrapper().getPosY());
     }
 
-    private void previousShapeSet() {
+    public void previousShapeSet() {
         slot().previousShapeSet();
     }
 
-    private void nextShapeSet() {
+    public void nextShapeSet() {
         slot().nextShapeSet();
     }
 
-    private void previousShape() {
+    public void previousShape() {
         slot().shapeSet().previousShape();
     }
 
-    private void nextShape() {
+    public void nextShape() {
         slot().shapeSet().nextShape();
     }
 

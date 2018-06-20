@@ -30,6 +30,26 @@ public class DisplayShapesMode extends CanvasMode {
     public void init(CanvasPanel canvas) {
         super.init(canvas);
         
+        getKeys().add('u', 'i',
+                      () -> "prev/next shape-set (" + (1 + slot().shapeSetIndex())
+                      + " of " + slot().numShapeSets()
+                      + " --> " + slot().shapeSet().name() + ")",
+                      () -> getCanvas().previousShapeSet(),
+                      () -> getCanvas().nextShapeSet());
+
+        getKeys().add('o', 'p',
+                      () -> "prev/next shape (" + (1 + slot().shapeSet().index())
+                      + " of " + slot().shapeSet().size()
+                      + " --> " + slot().wrapper().name() + ")",
+                      () -> getCanvas().previousShape(),
+                      () -> getCanvas().nextShape());
+    
+        if (getCanvas().numSlots() > 1)
+            getKeys().add('S',
+                          () -> "switch shape-slot (" + (getCanvas().shapeSlotIndex() + 1) +
+                          " of " + getCanvas().numSlots() + ")",
+                          () -> getCanvas().switchShapeSlot());
+
         getKeys().add('g', () -> "show grid " + KbdMode.boolStr(showGrid),
                       () -> toggleShowGrid());
 
@@ -154,14 +174,10 @@ public class DisplayShapesMode extends CanvasMode {
 
         // colour code for shape-validation
         for (ShapeSlot ss : getCanvas().getShapeSlots()) {
-            if (showDiagnostics) {
-                if (ss.shape().isValid())
-                    ss.wrapper().setColor(Color.GREEN);
-                else
-                    ss.wrapper().setColor(Color.RED);
-            } else {
-                ss.wrapper().setColor(Color.GRAY);
-            }
+            if (ss.shape().isValid())
+                ss.wrapper().setColor(Color.GREEN);
+            else
+                ss.wrapper().setColor(Color.RED);
         }
         
     }
@@ -192,26 +208,31 @@ public class DisplayShapesMode extends CanvasMode {
             g.setColor(Color.WHITE);
             gfx().shape(g, slot().wrapper().getSubShape());
         }
-
+        
         if (showDiagnostics) {
             // paint shape diagnostic info
 
             text.clear();
+
             text.add(textCol, "NAME: " + slot().wrapper().name());
             text.addIfElse(slot().shape().isValid(),
                            Color.GREEN, "VALIDATION: PASSED",
                            Color.RED,   "VALIDATION: FAILED");
             text.add(textCol, "nested depth: " + slot().shape().getNestedDepth());
 
+            if (showTriangulation)
+                text.add(textCol, "TRIANGLES: " + slot().shape().getNumTriangles());
+
             // EACH SUB-SHAPE
             int n = 1;
+            int currentIndex = 0;
             for (Shape45 s : slot().shape()) {
                 
                 Color col = textCol;
                 text.addSeparator(col);
-                // text.add(col, "OUTLINE " + n++);
 
-                addDiagnosticText(text, s, "OUTLINE " + n++, "");
+                addDiagnosticText(text, currentIndex, s, "OUTLINE " + n++, "");
+                currentIndex += s.getNumShapesRecursive();
             }
             text.paint(g);
         }
@@ -234,8 +255,13 @@ public class DisplayShapesMode extends CanvasMode {
         }
     }
 
-    private void addDiagnosticText(TextBlock text, Shape45 s, String label, String pad) {
+    private void addDiagnosticText(TextBlock text, int currentIndex, Shape45 s,
+                                   String label, String pad) {
         Color col = textCol;
+
+        if (vertexMode || subShapeMode)
+            if (currentIndex == slot().wrapper().subShapeIndex())
+                text.add(Color.WHITE, "<<<< CURRENT SUB-SHAPE >>>>");
 
         // TITLE
         text.add(col, pad + label);
@@ -275,8 +301,11 @@ public class DisplayShapesMode extends CanvasMode {
         text.add(textCol, pad + "NUM SUB-SHAPES: " + s.getNumSubShapes());
 
         int n = 1;
-        for (Shape45 sub : s.getSubShapes())
-            addDiagnosticText(text, sub, label + " SUB-SHAPE " + n++, pad + "  ");
+        currentIndex++;
+        for (Shape45 sub : s.getSubShapes()) {
+            addDiagnosticText(text, currentIndex, sub, label + " SUB-SHAPE " + n++, pad + "  ");
+            currentIndex += sub.getNumShapesRecursive();
+        }
     }
 
     @Override
@@ -340,6 +369,7 @@ public class DisplayShapesMode extends CanvasMode {
 
     private void incrVertexIndex(int amount) {
         slot().wrapper().incrVertexIndex(amount);
+        slot().wrapper().setSubShapeIndexForVertex();
         softUpdate();
     }
     
@@ -370,6 +400,7 @@ public class DisplayShapesMode extends CanvasMode {
 
     private void incrSubShapeIndex(int amount) {
         slot().wrapper().incrSubShapeIndex(amount);
+        slot().wrapper().setVertexIndexForSubShape();
         softUpdate();
     }
     

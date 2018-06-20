@@ -107,6 +107,12 @@ public class Gfx {
     public void fillBox(Graphics g, Box2D b) {
         fillRect(g, b.lowX, b.lowY, b.sizeX, b.sizeY);
     }
+
+    public void centeredCircle(Graphics g, int x, int y, int size) {
+        int posX = getX(x) - (size / 2);
+        int posY = getY(y) - (size / 2);
+        g.drawOval(posX, posY, size, size);
+    }
     
     public void grid(Graphics g, int x, int y) {
         grid(g, 0, 0, x, y);

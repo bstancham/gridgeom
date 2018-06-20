@@ -54,8 +54,13 @@ public abstract class CanvasMode {
     public abstract void paint(Graphics g);
 
     public void paintKbdCursor(Graphics g) {
+        paintKbdCursor(g, 15);
+    }
+
+    public void paintKbdCursor(Graphics g, int size) {
         g.setColor(Color.WHITE);
-        gfx().crosshairs(g, keyCursorX, keyCursorY, 8);
+        gfx().crosshairs(g, keyCursorX, keyCursorY, size);
+        gfx().centeredCircle(g, keyCursorX, keyCursorY, size);
     }
 
     public KbdMode getKeys() {
