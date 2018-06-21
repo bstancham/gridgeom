@@ -17,7 +17,7 @@ public class TestFrame extends JFrame
     public TestFrame(String title, CanvasMode[] modes, ShapeSet[] shapeSets) {
 	super(title);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
+        
         // canvas to paint on
         canvas = new CanvasPanel(2, shapeSets, modes);
 	setContentPane(createContentPane((Component) canvas));
@@ -32,6 +32,7 @@ public class TestFrame extends JFrame
 	setLocation(xLoc, yLoc);
 	setSize(xSize, ySize);
 	setVisible(true);
+        canvas.update();
     }
 
     private JPanel createContentPane(Component comp) {

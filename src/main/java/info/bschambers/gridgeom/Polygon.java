@@ -208,9 +208,9 @@ public class Polygon implements Iterable<Pt2D> {
      * than three.
      */
     public double getAngleAtVertex(int i) {
-        return Geom2D.angleTurned(getVertexWrapped(i - 1).toFloat(),
-                                  getVertexWrapped(i).toFloat(),
-                                  getVertexWrapped(i + 1).toFloat());
+        return Geom2D.angleTurned(getVertexWrapped(i - 1),
+                                  getVertexWrapped(i),
+                                  getVertexWrapped(i + 1));
     }
 
     public WindingDir getWindingDir() {
@@ -370,25 +370,25 @@ public class Polygon implements Iterable<Pt2D> {
     }
 
     private static class EarClippingTriangulator {
-        
+
+        private Polygon poly;
         private boolean[] used;
         private int a = 0;
         private int b = 0;
         private int c = 0;
         
-        private boolean kill = false;
+        private boolean failed = false;
         private int totalCount = 0;
 
         private List<Triangle> tris = new ArrayList<>();
         
-        public EarClippingTriangulator(Polygon poly) {
+        public EarClippingTriangulator(Polygon p) {
+            poly = p;
             used = new boolean[poly.getNumVertices()];
-            
-            while (numRemaining() >= 3
-                   && !kill) {
 
-                System.out.format("a=%s, b=%s, c=%s --- %s triangles --- remaining: %s\n",
-                                  a, b, c, tris.size(), remainString());
+            // reduce vertices until only 3 remain (the final triangle)
+            while (numRemaining() >= 3
+                   && !failed) {
 
                 // get next triangle
                 b = nextIndex(a);
@@ -397,33 +397,26 @@ public class Polygon implements Iterable<Pt2D> {
                                           poly.getVertex(b),
                                           poly.getVertex(c));
                 
-                if (!triangleIntersectsShape(poly) &&
-                    t.isCCWWinding()) {
+                if (!triangleIntersects() &&
+                    t.isCCWWinding() &&
+                    angleIsInside()) {
+                    // tests passed: add triangle and eliminate vertex b
                     tris.add(t);
                     used[b] = true;
                 } else {
-                    // move start point to next index
+                    // failed: move start point to next index
                     a = b;
                 }
+                
+                System.out.format("a=%s, b=%s, c=%s --- %s triangles --- remaining: %s\n",
+                                  a, b, c, tris.size(), remainString());
             }
 
             System.out.println("made " + tris.size() + " triangles");
-            // triangles = tris.toArray(new Triangle[tris.size()]);
         }
 
         public Triangle[] getTriangles() {
             return tris.toArray(new Triangle[tris.size()]);
-        }
-        
-        private String remainString() {
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < used.length; i++) {
-                if (used[i])
-                    sb.append(". |");
-                else
-                    sb.append(i + " |");
-            }
-            return sb.toString();
         }
 
         private int numRemaining() {
@@ -446,34 +439,29 @@ public class Polygon implements Iterable<Pt2D> {
                     i = 0;
                 }
             }
-
             // prevent infinite loop during testing
             if (totalCount > used.length * 5)
-                kill = true;
+                failed = true;
             
             return i;
         }
 
-        private boolean triangleIntersectsShape(Polygon poly) {
-            return edgeIntersectsShape(poly, a, b) ||
-                   edgeIntersectsShape(poly, b, c) ||
-                   edgeIntersectsShape(poly, c, a);
+        private boolean triangleIntersects() {
+            return edgeIntersects(a, b) ||
+                   edgeIntersects(b, c) ||
+                   edgeIntersects(c, a);
         }
 
-        private boolean edgeIntersectsShape(Polygon poly, int i1, int i2) {
-
-            if (contingentIndices(poly, i1, i2))
+        private boolean edgeIntersects(int i1, int i2) {
+            if (contingentIndices(i1, i2))
                 return false;
-
-            Line ln = new Line(poly.getVertex(i1),
-                               poly.getVertex(i2));
-            if (poly.intersectsIgnoreSharedVertices(ln))
+            if (poly.intersectsIgnoreSharedVertices(new Line(poly.getVertex(i1),
+                                                             poly.getVertex(i2))))
                 return true;
-                
             return false;
         }
 
-        private boolean contingentIndices(Polygon poly, int i1, int i2) {
+        private boolean contingentIndices(int i1, int i2) {
             if (i1 < i2 && i1 == i2 - 1)
                 return true;
            if (i1 == poly.getNumVertices() - 1 &&
@@ -481,6 +469,35 @@ public class Polygon implements Iterable<Pt2D> {
                 return true;
             return false;
         }
+
+        /**
+         * <p>Checks that the third edge of the current triangle is inside the
+         * outline of the polygon by checking that the angle-turned is greater
+         * than the angle-turned of the outline at that point.</p>
+         */
+        private boolean angleIsInside() {
+            if (numRemaining() < 4)
+                return true;
+            int d = nextIndex(c);
+            return Geom2D.angleTurned(poly.getVertex(b),
+                                      poly.getVertex(c),
+                                      poly.getVertex(a))
+                 > Geom2D.angleTurned(poly.getVertex(b),
+                                      poly.getVertex(c),
+                                      poly.getVertex(d));
+        }
+        
+        private String remainString() {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < used.length; i++) {
+                if (used[i])
+                    sb.append(". |");
+                else
+                    sb.append(i + " |");
+            }
+            return sb.toString();
+        }
+        
     }
 
 }
