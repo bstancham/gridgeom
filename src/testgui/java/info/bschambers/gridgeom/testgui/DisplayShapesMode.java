@@ -287,6 +287,8 @@ public class DisplayShapesMode extends CanvasMode {
 
         // TITLE
         text.add(col, pad + label);
+
+        text.add(pad + "CONVEX: " + s.getOutline().isConvex());
         
         // 45 DEGREE ANGLES
         text.addIfElse(s.is45Compliant(),

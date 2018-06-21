@@ -56,6 +56,11 @@ public class Triangle extends Polygon {
         return winding;
     }
 
+    @Override
+    public boolean isConvex() {
+        return !isDegenerate();
+    }
+
     public boolean isDegenerate() {
         if (degenerate == null)
             degenerate = Geom2D.collinear(a(), b(), c());

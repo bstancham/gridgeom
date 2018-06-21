@@ -71,22 +71,17 @@ public class Gfx {
     
     public void arrow(Graphics g, int x1, int y1, int x2, int y2) {
         g.drawLine(getX(x1), getY(y1), getX(x2), getY(y2));
-        
         // arrowhead
-        
         double radius = 10;
         double lineAngle = Geom2D.lineAngle(x1, y1, x2, y2);
         double headAngle = Math.toRadians(25);
         double h1Angle = lineAngle + headAngle;
         double h2Angle = lineAngle - headAngle;
-
         int x = getX(x2);
         int y = getY(y2);
-
         g.drawLine(x, y,
                    x + (int) (Geom2D.circlePointX(-h1Angle, radius)),
                    y + (int) (Geom2D.circlePointY(-h1Angle, radius)));
-
         g.drawLine(x, y,
                    x + (int) (Geom2D.circlePointX(-h2Angle, radius)),
                    y + (int) (Geom2D.circlePointY(-h2Angle, radius)));
@@ -159,12 +154,9 @@ public class Gfx {
     }
     
     public void shape(Graphics g, Shape45 s, int x, int y) {
-        // draw outline
         polygon(g, s.getOutline(), x, y);
-        // draw sub-shapes
-        for (int i = 0; i < s.getNumSubShapes(); i++) {
+        for (int i = 0; i < s.getNumSubShapes(); i++)
             shape(g, s.getSubShape(i), x, y);
-        }
     }
 
     public void polygon(Graphics g, Polygon poly) {
@@ -201,21 +193,23 @@ public class Gfx {
     }
     
     public void shapeNestedDepthFade(Graphics g, Shape45 s, Color c) {
-
         // paint outline
         g.setColor(c);
         polygon(g, s.getOutline());
-
         // get color for sub-shapes
         int depth = s.getNestedDepth();
         Color subColor = Gfx.relativeBrightness(c, 1.0 - (1.0 / depth));
-
         // paint sub-shapes
         for (Shape45 sub : s.getSubShapes())
             shapeNestedDepthFade(g, sub, subColor);
     }
 
     public void triangleNumbers(Graphics g, ShapeGroup sg) {
+        // adjustment for text size
+        int fontSize = g.getFont().getSize();
+        int xAdjust = fontSize / 2;
+        int yAdjust = fontSize / 2;
+        
         int count = 1;
         Iterator<Triangle> iter = sg.triangleIterator();
         while (iter.hasNext()) {
@@ -224,7 +218,7 @@ public class Gfx {
             int x = getX(centroid.x());
             int y = getY(centroid.y());
             // paint number
-            g.drawString("" + count, x, y);
+            g.drawString("" + count, x - xAdjust, y + yAdjust);
             count++;
         }
     }

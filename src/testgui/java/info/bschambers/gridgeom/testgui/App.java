@@ -677,7 +677,14 @@ public class App {
 
                             // RISK OF EDGE OUTSIDE OF OUTLINE
 
-                            new ShapeWrapper("hat (triangulation outside edge risk)",
+                            new ShapeWrapper("triangulation outside edge risk 1",
+                                             new ShapeGroup(new Shape45(new Pt2D(0, 2),
+                                                                        new Pt2D(0, 0),
+                                                                        new Pt2D(3, 0),
+                                                                        new Pt2D(3, 3),
+                                                                        new Pt2D(2, 2)))),
+
+                            new ShapeWrapper("triangulation outside edge risk 2 (pizza hut)",
                                              new ShapeGroup(new Shape45(new Pt2D(0, 0),
                                                                         new Pt2D(10, 0),
                                                                         new Pt2D(8, 2),
@@ -707,8 +714,32 @@ public class App {
                                                                         new Pt2D(0, 9)))),
 
                             // HOLES WITH SHARED VERTICES
+
+                            new ShapeWrapper("holes with shared vertices 1",
+                                             new ShapeGroup(new Shape45(new Shape45[] {
+                                                         new Shape45(new Pt2D(1, 3),
+                                                                     new Pt2D(3, 3),
+                                                                     new Pt2D(3, 1),
+                                                                     new Pt2D(1, 1)),
+                                                         new Shape45(new Pt2D(5, 7),
+                                                                     new Pt2D(7, 7),
+                                                                     new Pt2D(7, 5),
+                                                                     new Pt2D(5, 5)),
+                                                         new Shape45(new Pt2D(3, 9),
+                                                                     new Pt2D(5, 9),
+                                                                     new Pt2D(5, 7),
+                                                                     new Pt2D(3, 7)),
+                                                         new Shape45(new Pt2D(7, 9),
+                                                                     new Pt2D(9, 9),
+                                                                     new Pt2D(9, 7),
+                                                                     new Pt2D(7, 7)),
+                                                     },
+                                                     new Pt2D(0, 0),
+                                                     new Pt2D(10, 0),
+                                                     new Pt2D(10, 10),
+                                                     new Pt2D(0, 10)))),
                             
-                            new ShapeWrapper("holes with shared vertices (chequer board)",
+                            new ShapeWrapper("holes with shared vertices 2 (chequer board)",
                                              new ShapeGroup(new Shape45(new Shape45[] {
                                                          new Shape45(new Pt2D(1, 3),
                                                                      new Pt2D(3, 3),

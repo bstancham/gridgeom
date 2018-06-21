@@ -682,32 +682,10 @@ public class Shape45 {
     }
     
     private void triangulate() {
-        // triangles = triangulateConvexSimple(this);
         if (subShapes.length == 0)
-            triangles = triangulateEarClipping(this);
+            triangles = Polygon.triangulate(getOutline());
         else
             triangles = triangulateDivideAndConquer(this);
-    }
-
-    /**
-     * <p>Works for convex shapes with no sub-shapes and no zero-degree
-     * angles.</p>
-     */
-    private Triangle[] triangulateConvexSimple(Shape45 s) {
-        Triangle[] tris = new Triangle[s.getNumOutlineVertices() - 2];
-        for (int i = 0; i < tris.length; i++) {
-            tris[i] = new Triangle(s.getOutline().getVertex(0),
-                                   s.getOutline().getVertex(i + 1),
-                                   s.getOutline().getVertex(i + 2));
-        }
-        return tris;
-    }
-
-    /**
-     * <p>Works for any shape which has no sub-shapes.</p>
-     */
-    private Triangle[] triangulateEarClipping(Shape45 s) {
-        return new EarClippingTriangulator(s).getTriangles();
     }
 
     /**
@@ -715,120 +693,6 @@ public class Shape45 {
      */
     private Triangle[] triangulateDivideAndConquer(Shape45 s) {
         return new DivideAndConquerTriangulator(s).getTriangles();
-    }
-
-    private class EarClippingTriangulator {
-        
-        private boolean[] used;
-        private int a = 0;
-        private int b = 0;
-        private int c = 0;
-        
-        private boolean kill = false;
-        private int totalCount = 0;
-
-        private List<Triangle> tris = new ArrayList<>();
-        
-        public EarClippingTriangulator(Shape45 s) {
-            used = new boolean[s.getNumOutlineVertices()];
-            
-            while (numRemaining() >= 3
-                   && !kill) {
-
-                System.out.format("a=%s, b=%s, c=%s --- %s triangles --- remaining: %s\n",
-                                  a, b, c, tris.size(), remainString());
-
-                // get next triangle
-                b = nextIndex(a);
-                c = nextIndex(b);
-                Triangle t = new Triangle(s.getOutline().getVertex(a),
-                                          s.getOutline().getVertex(b),
-                                          s.getOutline().getVertex(c));
-                
-                if (!triangleIntersectsShape(s) &&
-                    t.isCCWWinding()) {
-                    tris.add(t);
-                    used[b] = true;
-                } else {
-                    // move start point to next index
-                    a = b;
-                }
-            }
-
-            System.out.println("made " + tris.size() + " triangles");
-            // triangles = tris.toArray(new Triangle[tris.size()]);
-        }
-
-        public Triangle[] getTriangles() {
-            return tris.toArray(new Triangle[tris.size()]);
-        }
-        
-        private String remainString() {
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < used.length; i++) {
-                if (used[i])
-                    sb.append(". |");
-                else
-                    sb.append(i + " |");
-            }
-            return sb.toString();
-        }
-
-        private int numRemaining() {
-            int count = 0;
-            for (Boolean bool : used)
-                if (!bool)
-                    count++;
-            return count;
-        }
-
-        private int nextIndex(int i) {
-            i++;
-            totalCount++;
-            if (i >= used.length) {
-                i = 0;
-            }
-            while (used[i]) {
-                i++;
-                if (i >= used.length) {
-                    i = 0;
-                }
-            }
-
-            // prevent infinite loop during testing
-            if (totalCount > used.length * 5)
-                kill = true;
-            
-            return i;
-        }
-
-        private boolean triangleIntersectsShape(Shape45 s) {
-            return edgeIntersectsShape(s, a, b) ||
-                   edgeIntersectsShape(s, b, c) ||
-                   edgeIntersectsShape(s, c, a);
-        }
-
-        private boolean edgeIntersectsShape(Shape45 s, int i1, int i2) {
-
-            if (contingentIndices(s, i1, i2))
-                return false;
-
-            Line ln = new Line(s.getOutline().getVertex(i1),
-                               s.getOutline().getVertex(i2));
-            if (s.getOutline().intersectsIgnoreSharedVertices(ln))
-                return true;
-                
-            return false;
-        }
-
-        private boolean contingentIndices(Shape45 s, int i1, int i2) {
-            if (i1 < i2 && i1 == i2 - 1)
-                return true;
-            if (i1 == s.getNumOutlineVertices() - 1 &&
-                i2 == 0)
-                return true;
-            return false;
-        }
     }
 
     private class DivideAndConquerTriangulator {
@@ -851,7 +715,7 @@ public class Shape45 {
             for (Pt2D p : shape.getOutline())
                 System.out.println(p);
             
-            for (Triangle t : triangulateEarClipping(shape))
+            for (Triangle t : Polygon.triangulateEarClipping(shape.getOutline()))
                 tris.add(t);
 
             // NESTED SHAPES
@@ -867,8 +731,18 @@ public class Shape45 {
         }
 
         /**
-         * <p>Makes bridge and adds two triangles...</p>
-         * <p>Returns the merged shape...</p>
+         * <p>Incorporates sub-shape {@code sub} in to the outline of {@code
+         * shape} by making a bridge between them.</p>
+         *
+         * <p>The bridge is made by finding a quadrilateral which incorporates
+         * an edge from both shapes, without intersecting any other edges. The
+         * quadrilateral is split into two triangles, which are added to the
+         * triangles list, then {@code shape} and {@code sub} are stitched
+         * together along the connecting edges into a single outline. Any
+         * remaining sub-shapes are added to the new resulting shape.</p>
+         *
+         * @return A new version of {@code shape}, with sub-shape {@code sub}
+         * merged into outline.
          */
         private Shape45 makeBridge(Shape45 shape, Shape45 sub) {
 

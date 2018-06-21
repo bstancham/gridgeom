@@ -15,6 +15,9 @@ public class Polygon implements Iterable<Pt2D> {
 
     private Pt2D[] vertices;
     protected WindingDir winding = null;
+    private Boolean convex = null;
+    private Integer numLeftTurns = null;
+    private Integer numRightTurns = null;
 
     public Polygon(Pt2D ... vertices) {
         this.vertices = vertices;
@@ -211,22 +214,32 @@ public class Polygon implements Iterable<Pt2D> {
     }
 
     public WindingDir getWindingDir() {
-        if (winding == null) {
-            // count left & right turns
-            int left = 0;
-            int right = 0;
-            for (int i = 0; i < getNumVertices(); i++) {
-                int dir = Geom2D.turnDirection(getVertexWrapped(i - 1),
-                                               getVertexWrapped(i),
-                                               getVertexWrapped(i + 1));
-                if (dir < 0) left++;
-                if (dir > 0) right++;
-            }
-            winding = WindingDir.INDETERMINATE;
-            if (left > right) winding = WindingDir.CCW;
-            if (right > left) winding = WindingDir.CW;
-        }
+        if (winding == null)
+            countTurns();
         return winding;
+    }
+
+    /**
+     * <p>Counts number of left and right turns and uses the results to find the
+     * winding direction of the polygon and whether or not it is convex.</p>
+     */
+    private void countTurns() {
+        numLeftTurns = 0;
+        numRightTurns = 0;
+        for (int i = 0; i < getNumVertices(); i++) {
+            int dir = Geom2D.turnDirection(getVertexWrapped(i - 1),
+                                           getVertexWrapped(i),
+                                           getVertexWrapped(i + 1));
+            if (dir < 0) numLeftTurns++;
+            if (dir > 0) numRightTurns++;
+        }
+        // analyse the results        
+        winding = WindingDir.INDETERMINATE;
+        if (numLeftTurns > numRightTurns)
+            winding = WindingDir.CCW;
+        if (numRightTurns > numLeftTurns)
+            winding = WindingDir.CW;
+        convex = numLeftTurns == 0 || numRightTurns == 0;
     }
     
     public boolean isCWWinding() {
@@ -235,6 +248,12 @@ public class Polygon implements Iterable<Pt2D> {
     
     public boolean isCCWWinding() {
         return getWindingDir() == WindingDir.CCW;
+    }
+
+    public boolean isConvex() {
+        if (convex == null)
+            countTurns();
+        return convex;
     }
 
     public int getNumDuplicateVertices() {
@@ -311,6 +330,157 @@ public class Polygon implements Iterable<Pt2D> {
         for (int i = 0; i < vertices.length; i++)
             newVertices[i] = getVertexWrapped(i + amt);
         return new Polygon(newVertices);
+    }
+
+
+
+    /*------------------------- TRIANGULATION --------------------------*/
+
+    /**
+     * <p>NOTE: Only works for polygon with CCW winding!</p>
+     */
+    public static Triangle[] triangulate(Polygon poly) {
+        if (poly.isConvex())
+            return triangulateConvex(poly);
+        else
+            return triangulateEarClipping(poly);
+    }
+
+    /**
+     * <p>Fast method, but only works for convex polygons no zero-degree
+     * angles.</p>
+     */
+    public static Triangle[] triangulateConvex(Polygon poly) {
+        Triangle[] tris = new Triangle[poly.getNumVertices() - 2];
+        System.out.println("Polygon.triangulateConvex() --> "
+                           + tris.length + " triangles");
+        for (int i = 0; i < tris.length; i++) {
+            tris[i] = new Triangle(poly.getVertex(0),
+                                   poly.getVertex(i + 1),
+                                   poly.getVertex(i + 2));
+        }
+        return tris;
+    }
+
+    /**
+     * <p>Works for any valid polygon with CCW winding.</p>
+     */
+    public static Triangle[] triangulateEarClipping(Polygon poly) {
+        return new EarClippingTriangulator(poly).getTriangles();
+    }
+
+    private static class EarClippingTriangulator {
+        
+        private boolean[] used;
+        private int a = 0;
+        private int b = 0;
+        private int c = 0;
+        
+        private boolean kill = false;
+        private int totalCount = 0;
+
+        private List<Triangle> tris = new ArrayList<>();
+        
+        public EarClippingTriangulator(Polygon poly) {
+            used = new boolean[poly.getNumVertices()];
+            
+            while (numRemaining() >= 3
+                   && !kill) {
+
+                System.out.format("a=%s, b=%s, c=%s --- %s triangles --- remaining: %s\n",
+                                  a, b, c, tris.size(), remainString());
+
+                // get next triangle
+                b = nextIndex(a);
+                c = nextIndex(b);
+                Triangle t = new Triangle(poly.getVertex(a),
+                                          poly.getVertex(b),
+                                          poly.getVertex(c));
+                
+                if (!triangleIntersectsShape(poly) &&
+                    t.isCCWWinding()) {
+                    tris.add(t);
+                    used[b] = true;
+                } else {
+                    // move start point to next index
+                    a = b;
+                }
+            }
+
+            System.out.println("made " + tris.size() + " triangles");
+            // triangles = tris.toArray(new Triangle[tris.size()]);
+        }
+
+        public Triangle[] getTriangles() {
+            return tris.toArray(new Triangle[tris.size()]);
+        }
+        
+        private String remainString() {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < used.length; i++) {
+                if (used[i])
+                    sb.append(". |");
+                else
+                    sb.append(i + " |");
+            }
+            return sb.toString();
+        }
+
+        private int numRemaining() {
+            int count = 0;
+            for (Boolean bool : used)
+                if (!bool)
+                    count++;
+            return count;
+        }
+
+        private int nextIndex(int i) {
+            i++;
+            totalCount++;
+            if (i >= used.length) {
+                i = 0;
+            }
+            while (used[i]) {
+                i++;
+                if (i >= used.length) {
+                    i = 0;
+                }
+            }
+
+            // prevent infinite loop during testing
+            if (totalCount > used.length * 5)
+                kill = true;
+            
+            return i;
+        }
+
+        private boolean triangleIntersectsShape(Polygon poly) {
+            return edgeIntersectsShape(poly, a, b) ||
+                   edgeIntersectsShape(poly, b, c) ||
+                   edgeIntersectsShape(poly, c, a);
+        }
+
+        private boolean edgeIntersectsShape(Polygon poly, int i1, int i2) {
+
+            if (contingentIndices(poly, i1, i2))
+                return false;
+
+            Line ln = new Line(poly.getVertex(i1),
+                               poly.getVertex(i2));
+            if (poly.intersectsIgnoreSharedVertices(ln))
+                return true;
+                
+            return false;
+        }
+
+        private boolean contingentIndices(Polygon poly, int i1, int i2) {
+            if (i1 < i2 && i1 == i2 - 1)
+                return true;
+           if (i1 == poly.getNumVertices() - 1 &&
+                i2 == 0)
+                return true;
+            return false;
+        }
     }
 
 }
