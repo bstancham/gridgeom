@@ -18,8 +18,9 @@ public class LineAngleMode extends CanvasMode {
 
     private Color angleBetweenColor = new Color(48, 175, 48);
     private Color lineLengthColor =   new Color(48, 175, 191);
-    
-    public LineAngleMode() {
+
+    @Override
+    protected void initLocal() {
         getKeys().add('s', "switch ends", () -> switchEnds());
         setKeyCursorToCurrentPoint();
     }

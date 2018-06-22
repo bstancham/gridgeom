@@ -200,6 +200,16 @@ public class Line {
         return false;
     }
 
+    public boolean contains(Pt2D p) {
+        if (boundingBoxContains(p)) {
+            if (p.equals(start) ||
+                p.equals(end))
+                return true;
+            return Geom2D.collinear(start, end, p);
+        }
+        return false;
+    }
+
     
     
     /*----------------------- LINE INTERSECTION ------------------------*/

@@ -9,13 +9,11 @@ import javax.swing.JFrame;
 import info.bschambers.gridgeom.*;
 
 /**
+ * <p>Inspect and edit shapes and display diagnostic information.</p>
  */
-public class DisplayShapesMode extends CanvasMode {
+public class ShapeEditMode extends CanvasMode {
 
-    private boolean showGrid = true;
     private boolean showMultiple = true;
-    private boolean showDiagnostics = true;
-    
     private boolean showTriangulation = false;
     private boolean showTriangulationNumbers = false;
     private boolean showTriangulationFill = false;
@@ -31,8 +29,10 @@ public class DisplayShapesMode extends CanvasMode {
     private TextBlock text = new TextBlock(500, 10);
     private Color textCol = Color.GRAY;
 
-    public void init(CanvasPanel canvas) {
-        super.init(canvas);
+    @Override
+    protected void initLocal() {
+        //}(CanvasPanel canvas) {
+        // super.init(canvas);
         
         getKeys().add('u', 'i',
                       () -> "prev/next shape-set (" + (1 + slot().shapeSetIndex())
@@ -165,8 +165,7 @@ public class DisplayShapesMode extends CanvasMode {
     }
     
     @Override
-    public void update() {
-        super.update();
+    protected void update() {
         
         // handle cursor movement
         if (vertexMode) {
@@ -351,14 +350,21 @@ public class DisplayShapesMode extends CanvasMode {
             return super.getKeys();
     }
 
-    private void toggleShowGrid() {
-        showGrid = !showGrid;
-    }
-    
     private void toggleShowMultiple() {
         showMultiple = !showMultiple;
     }
-    
+
+    /**
+     * <p>Switch between four different triangulation display states in
+     * sequence:</p>
+     *
+     * <ul>
+     * <li>wireframe and numbers</li>
+     * <li>filled with numbers</li>
+     * <li>filled without numbers</li>
+     * <li>no triangulation</li>
+     * </ul>
+     */
     private void toggleShowTriangulation() {
         if (!showTriangulation) {
             showTriangulation = true;
@@ -373,12 +379,6 @@ public class DisplayShapesMode extends CanvasMode {
             showTriangulationNumbers = false;
             showTriangulationFill = false;
         }
-        
-        // showTriangulation = !showTriangulation;
-    }
-    
-    private void toggleShowDiagnostics() {
-        showDiagnostics = !showDiagnostics;
     }
 
     

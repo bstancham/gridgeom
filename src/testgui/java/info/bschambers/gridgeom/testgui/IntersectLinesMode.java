@@ -25,7 +25,10 @@ public class IntersectLinesMode extends CanvasMode {
     private Pt2D start2 = new Pt2D(4, 3);
     private Pt2D end2   = new Pt2D(4, 8);
 
-    public IntersectLinesMode() {
+    // public IntersectLinesMode() {
+
+    @Override
+    protected void initLocal() {
         getKeys().add('a', "edit line 1 start",
                  () -> editEnd(End.Line1Start));
         getKeys().add('s', "edit line 1 end",

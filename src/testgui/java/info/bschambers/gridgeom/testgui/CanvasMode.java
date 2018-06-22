@@ -20,6 +20,9 @@ public abstract class CanvasMode {
 
     protected int keyCursorX = 5;
     protected int keyCursorY = 5;
+    
+    protected boolean showGrid = true;
+    protected boolean showDiagnostics = true;
 
     public CanvasMode() {
         title = getClass().getSimpleName();
@@ -33,7 +36,15 @@ public abstract class CanvasMode {
                            () -> keyCursorY--,
                            () -> keyCursorX--,
                            () -> keyCursorX++);
+
+        // set up local key-bindings etc
+        initLocal();
     }
+
+    /**
+     * <p>Use this to set up local key-bindings etc.</p>
+     */
+    protected abstract void initLocal();
 
     protected CanvasPanel getCanvas() {
         return canvas;
@@ -86,7 +97,7 @@ public abstract class CanvasMode {
      * <p>Gets called before {@code paint()}. Child classes may override this to
      * do what they need, but must remember to call {@code super.update()}.</p>
      */
-    protected void update() {}
+    protected abstract void update();
 
     public void setKeyCursorPos(Pt2D p) {
         setKeyCursorPos(p.x(), p.y());
@@ -97,4 +108,12 @@ public abstract class CanvasMode {
         keyCursorY = y;
     }
 
+    protected void toggleShowGrid() {
+        showGrid = !showGrid;
+    }
+    
+    protected void toggleShowDiagnostics() {
+        showDiagnostics = !showDiagnostics;
+    }
+    
 }

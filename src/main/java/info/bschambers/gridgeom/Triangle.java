@@ -45,9 +45,7 @@ public class Triangle extends Polygon {
             if (isDegenerate()) {
                 winding = WindingDir.INDETERMINATE;
             } else {
-                int dir = Geom2D.turnDirection(a().toFloat(),
-                                               b().toFloat(),
-                                               c().toFloat());
+                int dir = Geom2D.turnDirection(a(), b(), c());
                 if      (dir < 0) winding = WindingDir.CCW;
                 else if (dir > 0) winding = WindingDir.CW;
                 else              winding = WindingDir.INDETERMINATE;

@@ -1,5 +1,7 @@
 package info.bschambers.gridgeom;
 
+import java.util.Arrays;
+
 /**
  * <p>Static methods for 2D geometry.</p>
  */
@@ -214,11 +216,12 @@ public class Geom2D {
     }
 
     public static boolean collinear(Pt2D a, Pt2D b, Pt2D c) {
-
-        return lineAngle(a, b) == lineAngle(a, c);
+        // find bottom-left point
+        Pt2D[] points = new Pt2D[] { a, b, c };
+        Arrays.sort(points);
+        return lineAngle(points[0], points[1]) == lineAngle(points[0], points[2]);
         
-        // return pointIsOnLine(new Line(a, b), c);
-
+        // return lineAngle(a, b) == lineAngle(a, c);
     }
     
     // /**
@@ -241,8 +244,10 @@ public class Geom2D {
 	}
 	// ... ALL OTHER LINES
 	boolean out = p.y() > getPointForXValue(line, p.x()).y();
-	if (line.endX() > line.startX()) return out;
-	return !out;
+	if (line.endX() > line.startX())
+            return out;
+        else
+            return !out;
     }
 
 }

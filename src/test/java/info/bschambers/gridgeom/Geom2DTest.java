@@ -41,11 +41,22 @@ public class Geom2DTest {
     @Test
     public void testCollinear() {
         Pt2D col1 = new Pt2D(3, 1);
-        Pt2D col2 = new Pt2D(7, 5);
-        Pt2D col3 = new Pt2D(6, 4);
+        Pt2D col2 = new Pt2D(6, 4);
+        Pt2D col3 = new Pt2D(7, 5);
         Pt2D p1 = new Pt2D(6, 5);
+        // should pass whatever order points are given in
         assertTrue(Geom2D.collinear(col1, col2, col3));
+        assertTrue(Geom2D.collinear(col3, col2, col1));
+        assertTrue(Geom2D.collinear(col2, col3, col1));
         assertFalse(Geom2D.collinear(col1, col2, p1));
+        // vertical line
+        Pt2D vert1 = new Pt2D(-3, 34);
+        Pt2D vert2 = new Pt2D(-3, 32);
+        Pt2D vert3 = new Pt2D(-3, -7);
+        assertTrue(Geom2D.collinear(vert1, vert2, vert3));
+        assertTrue(Geom2D.collinear(vert3, vert2, vert1));
+        assertTrue(Geom2D.collinear(vert2, vert3, vert1));
+        assertFalse(Geom2D.collinear(vert1, vert2, p1));
     }
 
 }

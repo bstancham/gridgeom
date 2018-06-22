@@ -4,7 +4,7 @@ package info.bschambers.gridgeom;
  * <p>Immutable data type representing a point in 2D space with {@code int}
  * co-ordinates.</p>
  */
-public class Pt2D {
+public class Pt2D implements Comparable<Pt2D> {
 
     private int x;
     private int y;
@@ -45,6 +45,17 @@ public class Pt2D {
 
     public Pt2Df toFloat() {
         return new Pt2Df(x, y);
+    }
+
+    /**
+     * <p>Compares y, then x.</p>
+     */
+    public int compareTo(Pt2D p) {
+        if (y < p.y) return -1;
+        if (y > p.y) return 1;
+        if (x < p.x) return -1;
+        if (x > p.x) return 1;
+        return 0;
     }
 
     /**

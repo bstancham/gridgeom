@@ -68,7 +68,7 @@ public class Polygon implements Iterable<Pt2D> {
 
     
 
-    /*-------------------------- INTERSECTION --------------------------*/
+    /*---------------- INTERSECTION (non-45 compliant) -----------------*/
 
     public Set<Pt2Df> getIntersectionPoints(Line ln) {
         Set<Pt2Df> points = new HashSet<>();
@@ -80,13 +80,25 @@ public class Polygon implements Iterable<Pt2D> {
                     ln.boundingBoxContains(p))
                     points.add(p);
             }
-            
-            // // make sure not to miss any intersecting vertices of collinear lines etc
-            // if (ln.contains45(e.start()))
-            //     points.add(e.start().toFloat());
-            // if (ln.contains45(e.end()))
-            //     points.add(e.end().toFloat());
-
+        }
+        return points;
+    }
+    
+    public Set<Pt2Df> getIntersectionPointsIncludeParallel(Line ln) {
+        Set<Pt2Df> points = new HashSet<>();
+        // intersect all lines
+        for (Line e : getEdges()) {
+            Pt2Df p = e.getIntersectionPoint(ln);
+            if (p != null) {
+                if (e.boundingBoxContains(p) &&
+                    ln.boundingBoxContains(p))
+                    points.add(p);
+            }
+            // make sure not to miss any intersecting vertices of collinear lines etc
+            if (ln.contains(e.start()))
+                points.add(e.start().toFloat());
+            if (ln.contains(e.end()))
+                points.add(e.end().toFloat());
         }
         return points;
     }
@@ -109,11 +121,49 @@ public class Polygon implements Iterable<Pt2D> {
         return false;
     }
     
+    public boolean intersectsIgnoreSharedVerticesIncludeParallel(Line ln) {
+        Set<Pt2Df> ipts = getIntersectionPointsIncludeParallel(ln);
+        
+        if (ipts.size() == 0)
+            return false;
+
+        // check each intersection point against vertices
+        for (Pt2Df p : ipts) {
+
+            boolean pContains = containsVertex(p);
+            boolean ls = ln.start().equalsValue(p);
+            boolean le = ln.end().equalsValue(p);
+            
+            if (!pContains) return true;
+            if (!ls && !le) return true;
+
+            if (pContains && !(ls || le)) return true;
+            if (!pContains && (ls || le)) return true;
+
+        }
+        
+        return false;
+    }
+    
 
 
     /*------------------ INTERSECTION (45-compliant) -------------------*/
 
     public Set<Pt2Df> getIntersectionPoints45(Line ln) {
+        Set<Pt2Df> points = new HashSet<>();
+        // intersect all lines
+        for (Line e : getEdges()) {
+            Pt2Df p = e.getIntersectionPoint45(ln);
+            if (p != null) {
+                if (e.boundingBoxContains(p) &&
+                    ln.boundingBoxContains(p))
+                    points.add(p);
+            }
+        }
+        return points;
+    }
+    
+    public Set<Pt2Df> getIntersectionPointsIncludeParallel45(Line ln) {
         Set<Pt2Df> points = new HashSet<>();
         // intersect all lines
         for (Line e : getEdges()) {
@@ -226,20 +276,26 @@ public class Polygon implements Iterable<Pt2D> {
     private void countTurns() {
         numLeftTurns = 0;
         numRightTurns = 0;
+        int numZero = 0;
         for (int i = 0; i < getNumVertices(); i++) {
             int dir = Geom2D.turnDirection(getVertexWrapped(i - 1),
                                            getVertexWrapped(i),
                                            getVertexWrapped(i + 1));
-            if (dir < 0) numLeftTurns++;
-            if (dir > 0) numRightTurns++;
+            if (dir < 0)
+                numLeftTurns++;
+            else if (dir > 0)
+                numRightTurns++;
+            else
+                numZero++;
         }
-        // analyse the results        
+        // analyse results
         winding = WindingDir.INDETERMINATE;
         if (numLeftTurns > numRightTurns)
             winding = WindingDir.CCW;
         if (numRightTurns > numLeftTurns)
             winding = WindingDir.CW;
-        convex = numLeftTurns == 0 || numRightTurns == 0;
+        convex = numZero == 0 &&
+            (numLeftTurns == 0 || numRightTurns == 0);
     }
     
     public boolean isCWWinding() {
@@ -250,6 +306,16 @@ public class Polygon implements Iterable<Pt2D> {
         return getWindingDir() == WindingDir.CCW;
     }
 
+    /**
+     * <p>Polygon is considered convex if the angle at every vertex turns in the
+     * same direction, i.e. either all turns are clockwise, or all turns are
+     * counter-clockwise.</p>
+     *
+     * <p>Note that if any zero-degree angles are present the polygon is
+     * considered <strong>not</strong> convex. This is consistent with what may
+     * be safely be used with {@link Polygon#triangulatConvex
+     * triangulateConvex}.</p>
+     */
     public boolean isConvex() {
         if (convex == null)
             countTurns();
@@ -455,8 +521,8 @@ public class Polygon implements Iterable<Pt2D> {
         private boolean edgeIntersects(int i1, int i2) {
             if (contingentIndices(i1, i2))
                 return false;
-            if (poly.intersectsIgnoreSharedVertices(new Line(poly.getVertex(i1),
-                                                             poly.getVertex(i2))))
+            if (poly.intersectsIgnoreSharedVerticesIncludeParallel(new Line(poly.getVertex(i1),
+                                                                            poly.getVertex(i2))))
                 return true;
             return false;
         }
