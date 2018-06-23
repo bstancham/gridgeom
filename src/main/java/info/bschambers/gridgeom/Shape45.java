@@ -81,6 +81,16 @@ public class Shape45 {
             sub.setExpectedWinding(expectedWinding);
     }
 
+    /**
+     * <p>The expected winding direction of this shape's outline.</p>
+     *
+     * <p>To find the actual winding of the outline you can use:
+     * {@code getOutline().getWindingDir()}.</p>
+     */
+    public WindingDir getExpectedWinding() {
+        return expectedWinding;
+    }
+
     public Polygon getOutline() {
         return outline;
     }
@@ -746,22 +756,30 @@ public class Shape45 {
          */
         private Shape45 makeBridge(Shape45 shape, Shape45 sub) {
 
-            // two vertices in outline and
             finding:
             for (int oi = 0; oi < shape.getNumOutlineVertices(); oi++) {
-                // two vertices in subshape
                 for (int si = 0; si < sub.getNumOutlineVertices(); si++) {
 
+                    // two vertices in outline
                     Pt2D vo1 = shape.getOutline().getVertex(oi);
                     Pt2D vo2 = shape.getOutline().getVertexWrapped(oi + 1);
+                    // two vertices in subshape
                     Pt2D vs1 = sub.getOutline().getVertex(si);
                     Pt2D vs2 = sub.getOutline().getVertexWrapped(si + 1);
 
-                    if (!bridgeLinesIntersect(shape, vo1, vo2, vs1, vs2)) {
-                        // add two new triangles
-                        tris.add(new Triangle(vo1, vo2, vs1));
-                        tris.add(new Triangle(vo1, vs1, vs2));
+                    // To be safe, there must be no intersecting edges, bridge-triangles
+                    // must have counter-clockwise winding, and there must be no vertices
+                    // contained inside the area of the bridge-shape...
+                    Triangle t1 = new Triangle(vo1, vo2, vs1);
+                    Triangle t2 = new Triangle(vo1, vs1, vs2);
+                    if (t1.isCCWWinding() &&
+                        t2.isCCWWinding() &&
+                        !bridgeLinesIntersect(shape, vo1, vo2, vs1, vs2)) {
 
+                        // add two new triangles
+                        tris.add(t1);
+                        tris.add(t2);
+                        
                         // bridge gap and merge subshape
 
                         // outline vertices

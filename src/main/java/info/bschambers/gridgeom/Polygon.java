@@ -439,21 +439,23 @@ public class Polygon implements Iterable<Pt2D> {
 
         private Polygon poly;
         private boolean[] used;
+        private int numRemaining;
         private int a = 0;
         private int b = 0;
         private int c = 0;
         
+        private int countSinceLast = 0;
         private boolean failed = false;
-        private int totalCount = 0;
 
         private List<Triangle> tris = new ArrayList<>();
         
         public EarClippingTriangulator(Polygon p) {
             poly = p;
             used = new boolean[poly.getNumVertices()];
+            numRemaining = used.length;
 
             // reduce vertices until only 3 remain (the final triangle)
-            while (numRemaining() >= 3
+            while (numRemaining >= 3
                    && !failed) {
 
                 // get next triangle
@@ -469,6 +471,8 @@ public class Polygon implements Iterable<Pt2D> {
                     // tests passed: add triangle and eliminate vertex b
                     tris.add(t);
                     used[b] = true;
+                    numRemaining--;
+                    countSinceLast = 0;
                 } else {
                     // failed: move start point to next index
                     a = b;
@@ -478,24 +482,17 @@ public class Polygon implements Iterable<Pt2D> {
                                   a, b, c, tris.size(), remainString());
             }
 
-            System.out.println("made " + tris.size() + " triangles");
+            System.out.println("made " + tris.size() + " triangles... "
+                               + (failed ? "FAILED!" : "SUCCEEDED"));
         }
 
         public Triangle[] getTriangles() {
             return tris.toArray(new Triangle[tris.size()]);
         }
 
-        private int numRemaining() {
-            int count = 0;
-            for (Boolean bool : used)
-                if (!bool)
-                    count++;
-            return count;
-        }
-
         private int nextIndex(int i) {
             i++;
-            totalCount++;
+            countSinceLast++;
             if (i >= used.length) {
                 i = 0;
             }
@@ -505,8 +502,8 @@ public class Polygon implements Iterable<Pt2D> {
                     i = 0;
                 }
             }
-            // prevent infinite loop during testing
-            if (totalCount > used.length * 5)
+            // prevent infinite loop on failure
+            if (countSinceLast > used.length * 5)
                 failed = true;
             
             return i;
@@ -542,7 +539,7 @@ public class Polygon implements Iterable<Pt2D> {
          * than the angle-turned of the outline at that point.</p>
          */
         private boolean angleIsInside() {
-            if (numRemaining() < 4)
+            if (numRemaining < 4)
                 return true;
             int d = nextIndex(c);
             return Geom2D.angleTurned(poly.getVertex(b),

@@ -7,6 +7,7 @@ import java.awt.Color;
 import java.awt.event.KeyEvent;
 import javax.swing.JFrame;
 import info.bschambers.gridgeom.*;
+import static info.bschambers.gridgeom.Geom2D.WindingDir;
 
 /**
  * <p>Inspect and edit shapes and display diagnostic information.</p>
@@ -329,11 +330,14 @@ public class ShapeEditMode extends CanvasMode {
         String str = "WINDING: ";
         if (s.getOutline().isCCWWinding()) {
             str += "CCW";
+            if (s.getExpectedWinding() != WindingDir.CCW)
+                col = Color.RED;
         } else if (s.getOutline().isCWWinding()) {
             str += "CW";
-            col = Color.PINK;
+            if (s.getExpectedWinding() != WindingDir.CW)
+                col = Color.RED;
         } else {
-            str += "unknown";
+            str += "UNKNOWN!";
             col = Color.RED;
         }
         text.add(col, pad + str
