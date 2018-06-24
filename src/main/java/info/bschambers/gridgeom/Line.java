@@ -21,6 +21,10 @@ public class Line {
         this.end = end;
     }
 
+    public Linef toFloat() {
+        return new Linef(start.toFloat(), end.toFloat());
+    }
+
     
 
     /*--------------------------- ACCESSORS ----------------------------*/
@@ -116,10 +120,6 @@ public class Line {
 
     public boolean is45Compliant() {
         return isHoriz() || isVert() || isDiag45();
-    }
-
-    public Linef toFloat() {
-        return new Linef(start.toFloat(), end.toFloat());
     }
 
     /**

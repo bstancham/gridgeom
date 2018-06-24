@@ -9,6 +9,7 @@ public class App {
         CanvasMode[] modes = new CanvasMode[] {
             new ShapeEditMode(),
             new ShapesBooleanMode(),
+            new ShapeContainsMode(),
             new ShapeAndLineMode(),
             new LineIntersectionMode(),
             new LineAngleMode(),

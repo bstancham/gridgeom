@@ -25,6 +25,10 @@ public class Pt2Dd {
         return new Pt2D((int) x, (int) y);
     }
 
+    public Pt2Df toFloat() {
+        return new Pt2Df((float) x, (float) y);
+    }
+
     @Override
     public boolean equals(Object obj) {
         // some safe optimizations

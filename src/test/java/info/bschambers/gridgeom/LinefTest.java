@@ -17,8 +17,8 @@ public class LinefTest {
     private Linef lnVert2 = new Linef(7f, 5f, 7f, 1f);
     private Linef lnDegenerate1 = new Linef(5f, 6f, 5f, 6f);
     private Linef lnDegenerate2 = new Linef(0.314f, 42.7f, 0.314f, 42.7f);
-    private Linef lnNon451 = new Linef(10f, -9f, -4f, -10f);
-    private Linef lnNon452 = new Linef(2f, 4f, 5f, 8f);
+    private Linef lnNon451 = new Linef(7f, -7f, 11f, -8f);
+    private Linef lnNon452 = new Linef(3f, 11f, -2f, 1f);
     
     @Test
     public void testIsDegenerate() {
@@ -136,8 +136,8 @@ public class LinefTest {
         assertEquals(0f, lnHoriz2.slope(), EXACT);
         assertEquals(Float.POSITIVE_INFINITY, lnVert1.slope(), EXACT);
         assertEquals(Float.POSITIVE_INFINITY, lnVert2.slope(), EXACT);
-        // assertEquals(1f, lnNon451.slope(), EXACT);
-        // assertEquals(1f, lnNon452.slope(), EXACT);
+        assertEquals(-0.25f, lnNon451.slope(), EXACT);
+        assertEquals(2f, lnNon452.slope(), EXACT);
         assertEquals(Float.NEGATIVE_INFINITY, lnDegenerate1.slope(), EXACT);
         assertEquals(Float.NEGATIVE_INFINITY, lnDegenerate2.slope(), EXACT);
 
@@ -149,8 +149,8 @@ public class LinefTest {
         assertEquals(-9f, lnHoriz2.intercept(), EXACT);
         assertEquals(Float.POSITIVE_INFINITY, lnVert1.intercept(), EXACT);
         assertEquals(Float.POSITIVE_INFINITY, lnVert2.intercept(), EXACT);
-        // assertEquals(1f, lnNon451.intercept(), EXACT);
-        // assertEquals(1f, lnNon452.intercept(), EXACT);
+        assertEquals(-5.25f, lnNon451.intercept(), EXACT);
+        assertEquals(5f, lnNon452.intercept(), EXACT);
         assertEquals(Float.NEGATIVE_INFINITY, lnDegenerate1.intercept(), EXACT);
         assertEquals(Float.NEGATIVE_INFINITY, lnDegenerate2.intercept(), EXACT);
 
@@ -167,6 +167,20 @@ public class LinefTest {
     public void testGetIntersectionPoint45() {
         assertEquals(new Pt2Df(0, 3), lnDiagPos1.getIntersectionPoint45(lnDiagNeg1));
         assertEquals(new Pt2Df(-1.5f, -10.5f), lnDiagNeg2.getIntersectionPoint45(lnDiagPos2));
+        assertNull(lnDiagPos1.getIntersectionPoint45(lnDiagPos2)); // parallel
+        assertNull(lnHoriz1.getIntersectionPoint45(lnNon451)); // non-45
+        assertNull(lnNon452.getIntersectionPoint45(lnVert1)); // non-45
+        
+    }
+    
+    @Test
+    public void testGetIntersectionPoint() {
+        assertEquals(new Pt2Df(0, 3), lnDiagPos1.getIntersectionPoint(lnDiagNeg1));
+        assertEquals(new Pt2Df(-1.5f, -10.5f), lnDiagNeg2.getIntersectionPoint(lnDiagPos2));
+        assertNull(lnDiagPos1.getIntersectionPoint(lnDiagPos2)); // parallel
+        assertEquals(new Pt2Df(-53f, 8f), lnHoriz1.getIntersectionPoint(lnNon451)); // non-45
+        assertEquals(new Pt2Df(10f, 25f), lnNon452.getIntersectionPoint(lnVert1)); // non-45
+        assertEquals(new Pt2Df(3, -6), lnNon451.getIntersectionPoint(lnDiagPos2)); // non-45
     }
     
 }

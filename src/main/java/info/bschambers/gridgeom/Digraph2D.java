@@ -8,7 +8,6 @@ import java.util.TreeSet;
 import java.util.HashSet;
 import java.util.Stack;
 import java.util.Collection;
-import java.util.Comparator;
 
 /**
  * <p>A directed graph representing connections between points in two
@@ -119,23 +118,23 @@ public class Digraph2D {
     }
     
     public void addLine(Pt2Df p1, Pt2Df p2, int shapeID) {
-        System.out.println("addLine(p1=" + p1 + " p2=" + p2 + " id=" + shapeID + ")...");
-        System.out.println("... " + this);
 
-        Node n1 = getAndAddNode(p1);
-        Node n2 = getAndAddNode(p2);
-        SortedSet<Node> lineNodes
-            = new TreeSet<>(new SmallestDistComparator(n1));
-        lineNodes.add(n2);
+        // collect all points of new line (except start) into a sorted set so
+        // that they will be in the correct order to make connections at the end
+        SortedSet<Pt2Df> linePoints
+            = new TreeSet<>(new Pt2Df.SmallestDistComparator(p1));
+        linePoints.add(p2);
 
+        // keep track of which existing connections need to be split, and where
+        // to split them
         List<Connection> toSplit = new ArrayList<>();
         List<Pt2Df> splitPoints = new ArrayList<>();
         
         // check for intersections with existing lines...
-        Linef l1 = new Linef(p1, p2);
+        Linef newLine = new Linef(p1, p2);
         for (Node n : nodes) {
             for (Connection c : n.getConnectionsForward()) {
-                Linef l2 = c.getLine();
+                Linef oldLine = c.getLine();
 
                 // DEAL WITH ALL POSSIBLE SCENARIOS...
 
@@ -143,29 +142,21 @@ public class Digraph2D {
 
                 // overlapping parallel lines
 
-                if (l1.intersects(l2)) {
+                // do lines intersect?
+                if (newLine.intersects(oldLine)) {
+                    Pt2Df iPt = newLine.getIntersectionPoint(oldLine);
 
-                    // INTERSECTION CASES:
-
-                    // CASE: one shared end (no other intersection)
-                    
-                    // CASE: end point of l2 intersects l1
-
-                    // CASE: end point of l1 intersects l2
-                    
-                    // CASE: mutual intersection
-                
-                    // add node at intersection point
-                    Pt2Df iPt = l1.getIntersectionPoint(l2);
-                    // only make new node if it's not an existing end point
-                    if (!iPt.equals(p1) && !iPt.equals(p2)) {
-                        Node intersection = new Node(iPt);
-                        lineNodes.add(intersection);
+                    // add node for new line
+                    // ... only if point is not same as start point or end
+                    if (!iPt.equals(newLine.start()) &&
+                        !iPt.equals(newLine.end())) {
+                        linePoints.add(iPt);
                     }
-                    
-                    // divide at intersection point
-                    if (!iPt.equals(c.getOrigin().getPoint()) &&
-                        !iPt.equals(c.getDestination().getPoint())) {
+
+                    // divide old line at intersection point
+                    // ... only if point is not same as start or end
+                    if (!iPt.equals(oldLine.start()) &&
+                        !iPt.equals(oldLine.end())) {
                         toSplit.add(c);
                         splitPoints.add(iPt);
                     }
@@ -173,15 +164,14 @@ public class Digraph2D {
             }   
         }
 
-        // add all of the nodes on the stack connections to complete line
-        Node origin = n1;
-        for (Node dest : lineNodes) {
-            addNode(dest);
-            origin.addConnection(dest, shapeID);
+        // add new line (segmented as required)
+        Pt2Df origin = p1;
+        for (Pt2Df dest : linePoints) {
+            addConnection(origin, dest, shapeID);
             origin = dest;
         }
 
-        // split and make new connections
+        // split existing connections as required
         for (int i = 0; i < toSplit.size(); i++) {
             Connection c = toSplit.get(i);
             Pt2Df p = splitPoints.get(i);
@@ -189,9 +179,20 @@ public class Digraph2D {
             c.getOrigin().removeConnection(c.getDestination());
             // add two new connections
             Node iNode = getAndAddNode(p);
-            c.getOrigin().addConnection(iNode, shapeID);
-            iNode.addConnection(c.getDestination(), shapeID);
+            c.getOrigin().addConnection(iNode, c.getIDs());
+            iNode.addConnection(c.getDestination(), c.getIDs());
         }
+    }
+
+    /**
+     * <p>Adds a connection between {@code Node} at point {@code p1} and {@code
+     * Node} at point {@code p2}, creating each {@code Node} if it doesn't
+     * already exist.</p>
+     */
+    private void addConnection(Pt2Df p1, Pt2Df p2, int shapeID) {
+        Node n1 = getAndAddNode(p1);
+        Node n2 = getAndAddNode(p2);
+        n1.addConnection(n2, shapeID);
     }
 
     /**
@@ -281,7 +282,6 @@ public class Digraph2D {
         }
 
         public void addConnection(Node n, int shapeID) {
-            // Connection c = getAndAddConnection(n);
             Connection c = getConnection(n);
             if (c == null) {
                 c = new Connection(this, n, shapeID);
@@ -335,29 +335,6 @@ public class Digraph2D {
                 c.getOrigin().connections.remove(c);
             connections.clear();
         }
-    }
-
-    public class SmallestDistComparator implements Comparator<Node> {
-
-        private Pt2Df p;
-
-        public SmallestDistComparator(Node n) {
-            p = n.getPoint();
-        }
-
-        @Override
-        public int compare(Node a, Node b) {
-            double distA = getDist(a);
-            double distB = getDist(b);
-            if (distA < distB) return -1;
-            if (distA > distB) return 1;
-            else return 0;
-        }
-
-        private double getDist(Node n) {
-            return Geom2D.distSquared(p, n.getPoint());
-        }
-        
     }
 
     /**

@@ -1,5 +1,7 @@
 package info.bschambers.gridgeom;
 
+import java.util.Comparator;
+
 /**
  * <p>Immutable data type representing a point in 2D space with {@code float}
  * co-ordinates.</p>
@@ -40,6 +42,10 @@ public class Pt2Df {
         return (int) ((x * 31) + (y * 47));
     }
 
+    public Pt2Df sum(Pt2Df p) {
+        return new Pt2Df(x + p.x, y + p.y);
+    }
+
     /**
      * <p>Returns the slope between this point and the input point.  Formally,
      * if the two points are {@code (x0, y0)} and {@code (x1, y1)}, then the
@@ -59,4 +65,26 @@ public class Pt2Df {
         return (p.y - (float) this.y) / (p.x - (float) this.x);
     }
 
+    public static class SmallestDistComparator implements Comparator<Pt2Df> {
+
+        private Pt2Df p;
+
+        public SmallestDistComparator(Pt2Df p) {
+            this.p = p;
+        }
+
+        @Override
+        public int compare(Pt2Df a, Pt2Df b) {
+            double distA = getDist(a);
+            double distB = getDist(b);
+            if (distA < distB) return -1;
+            if (distA > distB) return 1;
+            else return 0;
+        }
+
+        private double getDist(Pt2Df a) {
+            return Geom2D.distSquared(p, a);
+        }
+        
+    }
 }

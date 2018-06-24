@@ -108,6 +108,11 @@ public class Geom2D {
                          ln.end().x(), ln.end().y());
     }
 
+    public static double lineAngle(Linef ln) {
+        return lineAngle(ln.start().x(), ln.start().y(),
+                         ln.end().x(), ln.end().y());
+    }
+
     public static double lineAngle(double x1, double y1, double x2, double y2) {
         
 	// get line length (using pythagoras)

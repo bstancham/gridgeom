@@ -186,9 +186,9 @@ public class Digraph2DTest {
         assertEquals(4, dg.getNumNodes());
         assertTrue(dg.isConnected(f1, f2));
         assertFalse(dg.isConnected(a4, a3));
-        Pt2Df iPt4 = new Pt2Df(10, 9);
-        assertTrue(dg.isConnected(a4, iPt4));
-        assertTrue(dg.isConnected(iPt4, a3));
+        // Pt2Df iPt4 = f1; //new Pt2Df(10, 9);
+        assertTrue(dg.isConnected(a4, f1));
+        assertTrue(dg.isConnected(f1, a3));
 
         // same, but the end-point is in the first line rather than second...
         
@@ -196,15 +196,15 @@ public class Digraph2DTest {
         dg.addLine(f1, f2, idShapeF);
         assertEquals(2, dg.getNumNodes());
         assertTrue(dg.isConnected(f1, f2));
-
         
         dg.addLine(a4, a3, idShapeA);
-        assertFalse(dg.isConnected(a4, a3));
-        
-        // assertEquals(4, dg.getNumNodes());
         // assertFalse(dg.isConnected(a4, a3));
-        // assertTrue(dg.isConnected(a4, iPt4));
-        // assertTrue(dg.isConnected(iPt4, a3));
+        
+        assertEquals(4, dg.getNumNodes());
+        assertTrue(dg.isConnected(f1, f2)); // no change here
+        assertFalse(dg.isConnected(a4, a3));
+        assertTrue(dg.isConnected(a4, f1));
+        assertTrue(dg.isConnected(f1, a3));
 
 
 

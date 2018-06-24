@@ -12,6 +12,32 @@ public class Gfx {
     private int centerY = 0;
     private CanvasPanel panel;
 
+    private Color[] digraphConnectionColors = new Color[] {
+        new Color(100, 100, 0  ),
+        new Color(200, 100, 0  ),
+        new Color(100, 200, 0  ),
+        new Color(200, 200, 0  ),
+        new Color(200, 100, 100),
+        new Color(100, 200, 100),
+        new Color(200, 200, 100),
+
+        new Color(100, 0  , 100),
+        new Color(200, 0  , 100),
+        new Color(100, 0  , 200),
+        new Color(200, 0  , 200),
+        new Color(200, 100, 100),
+        new Color(100, 100, 200),
+        new Color(200, 100, 200),
+
+        new Color(0  , 100, 100),
+        new Color(0  , 200, 100),
+        new Color(0  , 100, 200),
+        new Color(0  , 200, 200),
+        new Color(100, 200, 100),
+        new Color(100, 100, 200),
+        new Color(100, 200, 200),
+    };
+
     public Gfx(CanvasPanel panel) {
         this.panel = panel;
     }
@@ -204,6 +230,12 @@ public class Gfx {
         for (int i = 0; i < s.getNumSubShapes(); i++)
             shape(g, s.getSubShape(i), x, y);
     }
+    
+    public void fillShape(Graphics g, ShapeGroup sg) {
+        for (int i = 0; i < sg.getNumTriangles(); i++) {
+            fillPolygon(g, sg.getTriangle(i));
+        }
+    }
 
     public void polygon(Graphics g, Polygon poly) {
         polygon(g, poly, 0, 0);
@@ -270,12 +302,7 @@ public class Gfx {
     }
 
     public void digraph(Graphics g, Digraph2D graph) {
-        digraph(g, graph, Color.MAGENTA, new Color[] {
-                Color.YELLOW,
-                Color.CYAN,
-                Color.RED,
-                Color.GREEN,
-            });
+        digraph(g, graph, Color.MAGENTA, digraphConnectionColors);
     }
     
     public void digraph(Graphics g, Digraph2D graph,
@@ -284,23 +311,46 @@ public class Gfx {
         for (int i = 0; i < graph.getNumNodes(); i++) {
             Digraph2D.Node n = graph.getNode(i);
             for (Digraph2D.Connection c : n.getConnectionsForward()) {
-                g.setColor(connectionColors[0]);
-                arrow(g, c.getLine());
-            }
-            for (Digraph2D.Connection c : n.getConnectionsBackward()) {
-                g.setColor(connectionColors[0]);
-                arrow(g, c.getLine());
+                // we want to shift line to the side, so that bi-directional
+                // connections will show without overlapping...
+                // ... also, want to visualise connections with multiple
+                // shape-ids, so we will shift the line one step further to the
+                // side and re-draw it each time
+                Linef line = c.getLine();
+                double shiftRadius = 0.2;
+                // set ends slightly short so that arrowheads don't look muddled
+                Pt2Df startShift = Geom2D.circlePoint(line.angle(),
+                                                      shiftRadius).toFloat();
+                Pt2Df endShift = Geom2D.circlePoint(line.angle() + Geom2D.HALF_TURN,
+                                                    shiftRadius).toFloat();
+                // to shift sideways
+                Pt2Df multiShift = Geom2D.circlePoint(line.angle() + Geom2D.QUARTER_TURN,
+                                                      shiftRadius).toFloat();
+                Linef newLine = new Linef(line.start().sum(startShift),
+                                          line.end().sum(endShift));
+                // shift and repaint arrow in different color for each shape-id
+                for (Integer id : c.getIDs()) {
+                    g.setColor(connectionColors[id % connectionColors.length]);
+                    newLine = newLine.shift(multiShift);
+                    arrow(g, newLine);
+                }
             }
         }
+        
         // nodes
-        g.setColor(nodeColor);
         for (int i = 0; i < graph.getNumNodes(); i++) {
             Digraph2D.Node n = graph.getNode(i);
-            crosshairs(g, n.getPoint(), 16);
+            Pt2Df p = n.getPoint();
+            g.setColor(nodeColor);
+            crosshairs(g, p, 16);
+            g.setColor(Color.CYAN);
+            g.drawString(n.getNumConnectionsForward() + "",
+                         getX(p.x()) + 3,
+                         getY(p.y()) - 3);
         }
     }
 
-    
+
 
     /*----------------------------- ANGLES -----------------------------*/
 

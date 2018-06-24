@@ -10,6 +10,7 @@ public class Linef {
     private Pt2Df end;
     private Float slope = null;
     private Float intercept = null;
+    private Float angle = null;
 
     public Linef(float x1, float y1, float x2, float y2) {
         this(new Pt2Df(x1, y1), new Pt2Df(x2, y2));
@@ -83,6 +84,12 @@ public class Linef {
         return intercept;
     }
 
+    public float angle() {
+        if (angle == null)
+            angle = (float) Geom2D.lineAngle(this);
+        return angle;
+    }
+
     public boolean isDegenerate() {
         return start().equals(end);
     }
@@ -118,6 +125,14 @@ public class Linef {
         return slope() == ln.slope();
     }
 
+    
+
+    /*--------------- TRANSFORMATION (return new Linef) ----------------*/
+
+    public Linef shift(Pt2Df amt) {
+        return new Linef(start.sum(amt), end.sum(amt));
+    }
+    
 
 
     /*-------------------------- INTERSECTION --------------------------*/

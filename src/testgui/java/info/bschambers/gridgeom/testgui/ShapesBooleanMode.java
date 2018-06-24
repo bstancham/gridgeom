@@ -7,13 +7,17 @@ import java.awt.event.KeyEvent;
 import javax.swing.JFrame;
 import info.bschambers.gridgeom.*;
 
-public class ShapesBooleanMode extends CanvasMode {
+public class ShapesBooleanMode extends ShapeEditMode {
 
     private enum Operation {
-        UNION, SUBTRACTION_1, SUBTRACTION_2, INTERSECTION
+        DIGRAPH,
+        UNION,
+        SUBTRACTION_1,
+        SUBTRACTION_2,
+        INTERSECTION
     };
 
-    private Operation op = Operation.UNION;
+    private Operation op = Operation.DIGRAPH;
 
     private boolean showIntersectionPoints = true;
     private boolean showResult = true;
@@ -24,6 +28,7 @@ public class ShapesBooleanMode extends CanvasMode {
     
     @Override
     protected void initLocal() {
+        super.initLocal();
     }
 
     private ShapeGroup shape1() {
@@ -33,15 +38,12 @@ public class ShapesBooleanMode extends CanvasMode {
     private ShapeGroup shape2() {
         return getCanvas().getSlot(1).shape();
     }
-    
-    @Override
-    protected void update() {
-        slot().wrapper().setPosition(keyCursorX, keyCursorY);
-    }
 
     @Override
     public void paint(Graphics g) {
-        super.paint(g);
+        if (showGrid)
+            getCanvas().paintGrid(g);
+        getCanvas().paintCenter(g);
 
         text.clear();
         text.add(Color.CYAN, "OPERATION: " + op);
@@ -63,7 +65,6 @@ public class ShapesBooleanMode extends CanvasMode {
 
         text.add(Color.GRAY, "DIGRAPH: " + graph.getNumNodes() + " nodes");
 
-        // g.setColor(Color.MAGENTA);
         gfx().digraph(g, graph);
     }
 
