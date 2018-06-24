@@ -95,11 +95,10 @@ public class ShapeAndLineMode extends CanvasMode {
 
     @Override
     public void paint(Graphics g) {
+        super.paint(g);
+        
         text.clear();
         text45.clear();
-
-        if (showGrid)
-            getCanvas().paintGrid(g);
 
         // SHAPE
 

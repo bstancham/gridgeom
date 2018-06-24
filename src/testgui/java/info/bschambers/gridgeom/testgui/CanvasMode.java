@@ -37,6 +37,9 @@ public abstract class CanvasMode {
                            () -> keyCursorX--,
                            () -> keyCursorX++);
 
+        getKeys().add('g', () -> "show grid " + KbdMode.boolStr(showGrid),
+                      () -> toggleShowGrid());
+
         // set up local key-bindings etc
         initLocal();
     }
@@ -61,8 +64,12 @@ public abstract class CanvasMode {
     protected Gfx gfx() {
         return getCanvas().gfx();
     }
-
-    public abstract void paint(Graphics g);
+    
+    public void paint(Graphics g) {
+        if (showGrid)
+            getCanvas().paintGrid(g);
+        getCanvas().paintCenter(g);
+    }
 
     public void paintKbdCursor(Graphics g) {
         paintKbdCursor(g, 15);

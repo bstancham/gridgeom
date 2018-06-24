@@ -97,6 +97,9 @@ public class TestFrame extends JFrame
         dirY = y - lastY;
         lastX = x;
         lastY = y;
+        // shift canvas center
+        canvas.shiftCenter(dirX, -dirY);
+        repaint();
     }
     
     @Override

@@ -6,7 +6,7 @@ import java.awt.Color;
 import java.awt.event.KeyEvent;
 import info.bschambers.gridgeom.*;
 
-public class IntersectLinesMode extends CanvasMode {
+public class LineIntersectionMode extends CanvasMode {
 
     private TextBlock infoBlock = new TextBlock(300, 10);
     private Color infoColor = Color.GRAY;
@@ -72,8 +72,7 @@ public class IntersectLinesMode extends CanvasMode {
 
     @Override
     public void paint(Graphics g) {
-
-        getCanvas().paintGrid(g);
+        super.paint(g);
         
         Line l1 = new Line(start1, end1);
         Line l2 = new Line(start2, end2);
@@ -143,6 +142,9 @@ public class IntersectLinesMode extends CanvasMode {
         tb.addIfElse(l.isDegenerate(),
                      Color.RED, str,
                      Color.CYAN, str);
+        tb.addIfElse(l.isDegenerate(),
+                     Color.RED, title + ": null",
+                     Color.CYAN, title + ": slope=" + l.slope() + " intercept=" + l.intercept());
     }
 
     private void addContainsString(TextBlock tb, String title, Line l, Pt2Df p) {

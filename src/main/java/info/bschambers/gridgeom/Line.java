@@ -123,6 +123,20 @@ public class Line {
     }
 
     /**
+     * <p>Same as {@code Line.linesIntersect(this, ln)}.</p>
+     */
+    public boolean intersects(Line ln) {
+        return Line.linesIntersect(this, ln);
+    }
+
+    /**
+     * <p>Same as {@code Line.linesIntersect45(this, ln)}.</p>
+     */
+    public boolean intersects45(Line ln) {
+        return Line.linesIntersect45(this, ln);
+    }
+
+    /**
      * <p>WARNING: returns {@code null} if lines are parallel, or if either line
      * is degenerate.</p>
      */

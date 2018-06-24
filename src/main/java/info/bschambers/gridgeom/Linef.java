@@ -20,6 +20,11 @@ public class Linef {
         this.end = end;
     }
 
+    @Override
+    public String toString() {
+        return "<Linef: " + start + ", " + end + ">";
+    }
+
 
     
     /*--------------------------- ACCESSORS ----------------------------*/
@@ -62,15 +67,24 @@ public class Linef {
      *
      * <p>This is equivalent the Y co-ordinate of the point where the line
      * crosses the X axis (where X = 0).</p>
+     *
+     * <p>Vertical line returns {@code Float.POSITIVE_INFINITY}.<br/>
+     * Degenerate line returns {@code Float.NEGATIVE_INFINITY}.</p>
      */
     public float intercept() {
-        if (intercept == null)
-            intercept = startY() - startX() * slope();
+        if (intercept == null) {
+            if (isDegenerate())
+                intercept = Float.NEGATIVE_INFINITY;
+            else if (isVert())
+                intercept = Float.POSITIVE_INFINITY;
+            else
+                intercept = startY() - startX() * slope();
+        }
         return intercept;
     }
 
     public boolean isDegenerate() {
-        return start.x() == end.x() && start.y() == end.y();
+        return start().equals(end);
     }
     
     public boolean isHoriz() {
@@ -87,15 +101,61 @@ public class Linef {
     }
 
     public boolean isDiag45Positive() {
-        return distX() == distY() && start.x() != end.x();
+        return distX() == distY()
+            && start.x() != end.x();
     }
 
     public boolean isDiag45Negative() {
-        return distX() == -distY() && start.x() != end.x();
+        return distX() == -distY()
+            && start.x() != end.x();
     }
 
     public boolean is45Compliant() {
         return isHoriz() || isVert() || isDiag45();
+    }
+
+    public boolean isParallel(Linef ln) {
+        return slope() == ln.slope();
+    }
+
+
+
+    /*-------------------------- INTERSECTION --------------------------*/
+
+    /**
+     * <p>Same as {@code Line.linesIntersect(this, ln)}.</p>
+     */
+    public boolean intersects(Linef ln) {
+        return Linef.linesIntersect(this, ln);
+    }
+
+    /**
+     * <p>Same as {@code Linef.linesIntersect45(this, ln)}.</p>
+     */
+    public boolean intersects45(Linef ln) {
+        return Linef.linesIntersect45(this, ln);
+    }
+
+    /**
+     * <p>WARNING: returns {@code null} if lines are parallel, or if either line
+     * is degenerate.</p>
+     */
+    public Pt2Df getIntersectionPoint(Linef ln) {
+        // test for degenerate lines and for parallel condition
+        if (isDegenerate() || ln.isDegenerate() || isParallel(ln))
+            return null;
+
+        // check for vertical line
+        if (isVert())
+            return new Pt2Df(startX(),
+                             (float) ((ln.slope() * startX()) + ln.intercept()));
+        if (ln.isVert())
+            return new Pt2Df(ln.startX(),
+                             (float) ((slope() * ln.startX()) + intercept()));
+
+        double x = -(intercept() - ln.intercept()) / (slope() - ln.slope());
+        double y = (slope() * x) + intercept();
+        return new Pt2Df((float) x, (float) y);
     }
 
     /**
@@ -144,7 +204,6 @@ public class Linef {
                 return l.getIntersectionPoint45(this);
 
             if (l.isDiag45()) {
-
                 // both are diag
                 if (isDiag45Positive() && l.isDiag45Negative())
                     return getIntersectionPointPosNeg45(l);
@@ -178,20 +237,17 @@ public class Linef {
     }
 
     private Pt2Df getIntersectionPointPosNeg45(Linef l) {
-                    
         float thisConst = getDiagYConst();
         float thatConst = l.getDiagYConst();
-        // System.out.println("line1 y-const = " + thisConst);
-        // System.out.println("line2 y-const = " + thatConst);
-
+        
         float smaller = Math.min(thisConst, thatConst);
         float larger = Math.max(thisConst, thatConst);
         float diff = larger - smaller;
         float half = diff / 2.0f;
-                    
-        float x = half;
+        
+        float x = (thisConst == smaller ? half : -half);
         float y = smaller + half;
-                    
+        
         return new Pt2Df(x, y);
     }
 
@@ -222,7 +278,7 @@ public class Linef {
     public boolean contains45(Pt2D p) {
         return contains45(p.toFloat());
     }
-    
+
     public boolean contains45(Pt2Df p) {
         if (boundingBoxContains(p)) {
             if (isHoriz() || isVert())
@@ -235,13 +291,26 @@ public class Linef {
         return false;
     }
 
-    public boolean intersects45(Linef l) {
-        Pt2Df p = getIntersectionPoint45(l);
+
+
+    /*------------------------- STATIC METHODS -------------------------*/
+
+    public static boolean linesIntersect(Linef l1, Linef l2) {
+        Pt2Df p = l1.getIntersectionPoint(l2);
         if (p == null)
             return false;
-        else
-            return (boundingBoxContains(p) &&
-                    l.boundingBoxContains(p));
+        return l1.boundingBoxContains(p) && l2.boundingBoxContains(p);
     }
     
+    /**
+     * <p>NOTE: Always returns {@code false} unless both lines are
+     * 45-compliant!</p>
+     */
+    public static boolean linesIntersect45(Linef l1, Linef l2) {
+        Pt2Df p = l1.getIntersectionPoint45(l2);
+        if (p == null)
+            return false;
+        return l1.contains45(p) && l2.contains45(p);
+    }
+
 }

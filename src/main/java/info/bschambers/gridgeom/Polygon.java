@@ -18,6 +18,7 @@ public class Polygon implements Iterable<Pt2D> {
     private Boolean convex = null;
     private Integer numLeftTurns = null;
     private Integer numRightTurns = null;
+    private Line[] polyEdges = null;
 
     public Polygon(Pt2D ... vertices) {
         this.vertices = vertices;
@@ -37,6 +38,30 @@ public class Polygon implements Iterable<Pt2D> {
         return vertices[i];
     }
 
+    /**
+     * <p>Makes a new array of all the edges.</p>
+     */
+    public int getNumEdges() {
+        if (polyEdges == null)
+            buildEdges();
+        return polyEdges.length;
+    }
+
+    /**
+     * @return The edge at index {@code i}.
+     */
+    public Line getEdge(int i) {
+        if (polyEdges == null)
+            buildEdges();
+        return polyEdges[i];
+    }
+
+    private void buildEdges() {
+        polyEdges = new Line[getNumVertices()];
+        for (int i = 0; i < getNumVertices(); i++)
+            polyEdges[i] = new Line(vertices[i], getVertexWrapped(i + 1));
+    }
+
     public boolean containsVertex(Pt2D v) {
         for (Pt2D vv : this)
             if (v.equals(vv))
@@ -50,21 +75,6 @@ public class Polygon implements Iterable<Pt2D> {
                 return true;
         return false;
     }
-    
-
-
-    /*---------------------------- GEOMETRY ----------------------------*/
-
-    /**
-     * <p>Makes a new array of all the edges.</p>
-     */
-    public Line[] getEdges() {
-        Line[] edges = new Line[getNumVertices()];
-        for (int i = 0; i < getNumVertices(); i++) {
-            edges[i] = new Line(vertices[i], getVertexWrapped(i + 1));
-        }
-        return edges;
-    }
 
     
 
@@ -73,10 +83,11 @@ public class Polygon implements Iterable<Pt2D> {
     public Set<Pt2Df> getIntersectionPoints(Line ln) {
         Set<Pt2Df> points = new HashSet<>();
         // intersect all lines
-        for (Line e : getEdges()) {
-            Pt2Df p = e.getIntersectionPoint(ln);
+        for (int i = 0; i < getNumEdges(); i++) {
+            Line edge = getEdge(i);
+            Pt2Df p = edge.getIntersectionPoint(ln);
             if (p != null) {
-                if (e.boundingBoxContains(p) &&
+                if (edge.boundingBoxContains(p) &&
                     ln.boundingBoxContains(p))
                     points.add(p);
             }
@@ -87,18 +98,19 @@ public class Polygon implements Iterable<Pt2D> {
     public Set<Pt2Df> getIntersectionPointsIncludeParallel(Line ln) {
         Set<Pt2Df> points = new HashSet<>();
         // intersect all lines
-        for (Line e : getEdges()) {
-            Pt2Df p = e.getIntersectionPoint(ln);
+        for (int i = 0; i < getNumEdges(); i++) {
+            Line edge = getEdge(i);
+            Pt2Df p = edge.getIntersectionPoint(ln);
             if (p != null) {
-                if (e.boundingBoxContains(p) &&
+                if (edge.boundingBoxContains(p) &&
                     ln.boundingBoxContains(p))
                     points.add(p);
             }
             // make sure not to miss any intersecting vertices of collinear lines etc
-            if (ln.contains(e.start()))
-                points.add(e.start().toFloat());
-            if (ln.contains(e.end()))
-                points.add(e.end().toFloat());
+            if (ln.contains(edge.start()))
+                points.add(edge.start().toFloat());
+            if (ln.contains(edge.end()))
+                points.add(edge.end().toFloat());
         }
         return points;
     }
@@ -152,10 +164,11 @@ public class Polygon implements Iterable<Pt2D> {
     public Set<Pt2Df> getIntersectionPoints45(Line ln) {
         Set<Pt2Df> points = new HashSet<>();
         // intersect all lines
-        for (Line e : getEdges()) {
-            Pt2Df p = e.getIntersectionPoint45(ln);
+        for (int i = 0; i < getNumEdges(); i++) {
+            Line edge = getEdge(i);
+            Pt2Df p = edge.getIntersectionPoint45(ln);
             if (p != null) {
-                if (e.boundingBoxContains(p) &&
+                if (edge.boundingBoxContains(p) &&
                     ln.boundingBoxContains(p))
                     points.add(p);
             }
@@ -166,18 +179,19 @@ public class Polygon implements Iterable<Pt2D> {
     public Set<Pt2Df> getIntersectionPointsIncludeParallel45(Line ln) {
         Set<Pt2Df> points = new HashSet<>();
         // intersect all lines
-        for (Line e : getEdges()) {
-            Pt2Df p = e.getIntersectionPoint45(ln);
+        for (int i = 0; i < getNumEdges(); i++) {
+            Line edge = getEdge(i);
+            Pt2Df p = edge.getIntersectionPoint45(ln);
             if (p != null) {
-                if (e.boundingBoxContains(p) &&
+                if (edge.boundingBoxContains(p) &&
                     ln.boundingBoxContains(p))
                     points.add(p);
             }
             // make sure not to miss any intersecting vertices of collinear lines etc
-            if (ln.contains45(e.start()))
-                points.add(e.start().toFloat());
-            if (ln.contains45(e.end()))
-                points.add(e.end().toFloat());
+            if (ln.contains45(edge.start()))
+                points.add(edge.start().toFloat());
+            if (ln.contains45(edge.end()))
+                points.add(edge.end().toFloat());
         }
         return points;
     }
@@ -185,18 +199,20 @@ public class Polygon implements Iterable<Pt2D> {
     public Set<Pt2Df> getIntersectionPoints45(Polygon s) {
         Set<Pt2Df> points = new HashSet<>();
         // intersect all lines
-        for (Line l1 : getEdges()) {
-            for (Line l2 : s.getEdges()) {
-                Pt2Df p = l1.getIntersectionPoint45(l2);
+        for (int i = 0; i < getNumEdges(); i++) {
+            Line e1 = getEdge(i);
+            for (int j = 0; j < s.getNumEdges(); j++) {
+                Line e2 = s.getEdge(j);
+                Pt2Df p = e1.getIntersectionPoint45(e2);
                 if (p != null) {
-                    if (l1.boundingBoxContains(p) &&
-                        l2.boundingBoxContains(p))
+                    if (e1.boundingBoxContains(p) &&
+                        e2.boundingBoxContains(p))
                         points.add(p);
                 }
             }
             // make sure not to miss any intersecting vertices of collinear lines etc
             for (Pt2D p : s)
-                if (l1.contains45(p))
+                if (e1.contains45(p))
                     points.add(p.toFloat());
         }
         return points;

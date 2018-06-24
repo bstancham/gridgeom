@@ -24,6 +24,7 @@ public class ShapeGroup implements Iterable<Shape45> {
     private Integer numVertices = null;
     private Box2D boundingBox = null;
     private Triangle[] triangles = null;
+    private Integer numEdges = null;
     private int nestedDepth;
     private Boolean valid = null;
 
@@ -194,7 +195,41 @@ public class ShapeGroup implements Iterable<Shape45> {
         return triangles[index];
     }
 
+    public int getNumEdges() {
+        if (numEdges == null)
+            buildEdges();
+        return numEdges;
+    }
 
+    /**
+     * @return The edge at index {@code index}.
+     * @throws ArrayIndexOutOfBoundsException If {@code index} is out of range;
+     */
+    public Line getEdge(int index) {
+        if (numEdges == null)
+            buildEdges();
+
+        // get edge recursively
+        int i = index;
+        for (Shape45 s : shapes) {
+            if (i < s.getNumEdges())
+                return s.getEdge(i);
+            else
+                i -= s.getNumEdges();
+        }
+            
+        throw new ArrayIndexOutOfBoundsException("index " + index
+                                                 + " out of range (" + getNumEdges() + " edges)");
+    }
+    
+    private void buildEdges() {
+        // NOTE: Shape45.getNumEdges() triggers edges to be built
+        numEdges = 0;
+        for (Shape45 s : shapes)
+            numEdges += s.getNumEdges();
+    }
+
+    
 
     /*------------ TRANSFORMATIONS (return new ShapeGroup) -------------*/
 

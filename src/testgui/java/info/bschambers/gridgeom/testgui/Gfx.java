@@ -8,37 +8,85 @@ import info.bschambers.gridgeom.*;
 public class Gfx {
 
     private int scaling = 10;
+    private int centerX = 0;
+    private int centerY = 0;
     private CanvasPanel panel;
 
     public Gfx(CanvasPanel panel) {
         this.panel = panel;
     }
 
+    private int getScaling() {
+        return scaling;
+    }
+
+    private int getCenterX() {
+        return centerX;
+    }
+
+    private int getCenterY() {
+        return panel.getHeight() - centerY;
+    }
+
     public int getX(int x) {
-        return x * scaling;
+        return x * scaling + getCenterX();
     }
 
     public int getY(int y) {
-        return panel.getSize().height - (y * scaling);
+        return getCenterY() - (y * scaling);
     }
 
     public int getX(float x) {
-        return (int) (x * scaling);
+        return (int) (x * scaling) + getCenterX();
     }
 
     public int getY(float y) {
-        return (int) (panel.getSize().height - (y * scaling));
+        return (int) (getCenterY() - (y * scaling));
     }
 
     public Pt2D getPoint(Pt2D p) {
         return new Pt2D(getX(p.x()), getY(p.y()));
     }
 
-    public void setScaling(int val) { scaling = val; }
+    public void setScaling(int val) {
+        scaling = val;
+    }
 
     public void incrementScaling(int amt) {
         scaling += amt;
         if (scaling < 1) scaling = 1;
+    }
+
+    public void shiftCenter(int x, int y) {
+        centerX += x;
+        centerY += y;
+    }
+
+    /**
+     * <p>Paints horizontal and vertical which cross at the current center.</p>
+     */
+    public void centerLines(Graphics g) {
+        g.drawLine(0, getCenterY(), panel.getWidth(), getCenterY());
+        g.drawLine(getCenterX(), 0, getCenterX(), panel.getHeight());
+    }
+
+    /**
+     * <p>Paints a grid, which fills the whole canvas, and is aligned with the
+     * current center point.</p>
+     */
+    public void grid(Graphics g) {
+        // vertical lines
+        int x = getCenterX() % getScaling();
+        while (x < panel.getWidth()) {
+            g.drawLine(x, 0, x, panel.getHeight());
+            x += getScaling();
+        }
+        // horizontal lines
+        int y = getCenterY() % getScaling();
+        while (y < panel.getHeight()) {
+            g.drawLine(0, y, panel.getWidth(), y);
+            y += getScaling();
+        }
     }
 
     
@@ -62,6 +110,10 @@ public class Gfx {
     }
 
     public void arrow(Graphics g, Line l) {
+        arrow(g, l.toFloat());
+    }
+    
+    public void arrow(Graphics g, Linef l) {
         arrow(g, l.start(), l.end());
     }
     
@@ -69,7 +121,12 @@ public class Gfx {
         arrow(g, start.x(), start.y(), end.x(), end.y());
     }
     
-    public void arrow(Graphics g, int x1, int y1, int x2, int y2) {
+    public void arrow(Graphics g, Pt2Df start, Pt2Df end) {
+        arrow(g, start.x(), start.y(), end.x(), end.y());
+    }
+    
+    // public void arrow(Graphics g, int x1, int y1, int x2, int y2) {
+    public void arrow(Graphics g, float x1, float y1, float x2, float y2) {
         g.drawLine(getX(x1), getY(y1), getX(x2), getY(y2));
         // arrowhead
         double radius = 10;
@@ -109,17 +166,6 @@ public class Gfx {
         g.drawOval(posX, posY, size, size);
     }
     
-    public void grid(Graphics g, int x, int y) {
-        grid(g, 0, 0, x, y);
-    }
-    
-    public void grid(Graphics g, int x1, int y1, int x2, int y2) {
-        for (int i = x1; i <= x2; i++)
-            line(g, i, y1, i, y2);
-        for (int i = y1; i <= y2; i++)
-            line(g, x1, i, x2, i);
-    }
-
     public void crosshairs(Graphics g, Pt2Df p, int size) {
         crosshairs(g, p.x(), p.y(), size);
     }
@@ -220,6 +266,37 @@ public class Gfx {
             // paint number
             g.drawString("" + count, x - xAdjust, y + yAdjust);
             count++;
+        }
+    }
+
+    public void digraph(Graphics g, Digraph2D graph) {
+        digraph(g, graph, Color.MAGENTA, new Color[] {
+                Color.YELLOW,
+                Color.CYAN,
+                Color.RED,
+                Color.GREEN,
+            });
+    }
+    
+    public void digraph(Graphics g, Digraph2D graph,
+                        Color nodeColor, Color[] connectionColors) {
+        // connections
+        for (int i = 0; i < graph.getNumNodes(); i++) {
+            Digraph2D.Node n = graph.getNode(i);
+            for (Digraph2D.Connection c : n.getConnectionsForward()) {
+                g.setColor(connectionColors[0]);
+                arrow(g, c.getLine());
+            }
+            for (Digraph2D.Connection c : n.getConnectionsBackward()) {
+                g.setColor(connectionColors[0]);
+                arrow(g, c.getLine());
+            }
+        }
+        // nodes
+        g.setColor(nodeColor);
+        for (int i = 0; i < graph.getNumNodes(); i++) {
+            Digraph2D.Node n = graph.getNode(i);
+            crosshairs(g, n.getPoint(), 16);
         }
     }
 

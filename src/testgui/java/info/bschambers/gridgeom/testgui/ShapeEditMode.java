@@ -32,8 +32,6 @@ public class ShapeEditMode extends CanvasMode {
 
     @Override
     protected void initLocal() {
-        //}(CanvasPanel canvas) {
-        // super.init(canvas);
         
         getKeys().add('u', 'i',
                       () -> "prev/next shape-set (" + (1 + slot().shapeSetIndex())
@@ -54,9 +52,6 @@ public class ShapeEditMode extends CanvasMode {
                           () -> "switch shape-slot (" + (getCanvas().shapeSlotIndex() + 1) +
                           " of " + getCanvas().numSlots() + ")",
                           () -> getCanvas().switchShapeSlot());
-
-        getKeys().add('g', () -> "show grid " + KbdMode.boolStr(showGrid),
-                      () -> toggleShowGrid());
 
         getKeys().add('m', () -> "show multiple " + KbdMode.boolStr(showMultiple),
                       () -> toggleShowMultiple());
@@ -198,6 +193,7 @@ public class ShapeEditMode extends CanvasMode {
 
         if (showGrid)
             getCanvas().paintGrid(g);
+        getCanvas().paintCenter(g);
 
         if (showMultiple) {
             for (ShapeSlot ss : getCanvas().getShapeSlots()) {

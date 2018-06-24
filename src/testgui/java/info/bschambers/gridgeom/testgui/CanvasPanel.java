@@ -96,6 +96,10 @@ public class CanvasPanel extends JPanel {
         return shapeSlots.length;
     }
 
+    public ShapeSlot getSlot(int index) {
+        return shapeSlots[index];
+    }
+
     public ShapeSlot[] getShapeSlots() {
         return shapeSlots;
     }
@@ -138,6 +142,10 @@ public class CanvasPanel extends JPanel {
 
     public Gfx gfx() {
         return gfx;
+    }
+
+    public void shiftCenter(int x, int y) {
+        gfx().shiftCenter(x, y);
     }
 
     public void setMouseX(int val) { mouseX = val; }
@@ -222,8 +230,13 @@ public class CanvasPanel extends JPanel {
     }
     
     public void paintGrid(Graphics g) {
+        g.setColor(new Color(0, 0, 150));
+        gfx().grid(g);
+    }
+    
+    public void paintCenter(Graphics g) {
         g.setColor(Color.BLUE);
-        gfx().grid(g, gridSizeX, gridSizeY);
+        gfx().centerLines(g);
     }
 
 }

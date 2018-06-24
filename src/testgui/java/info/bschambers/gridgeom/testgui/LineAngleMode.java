@@ -44,11 +44,12 @@ public class LineAngleMode extends CanvasMode {
 
     @Override
     public void paint(Graphics g) {
+        super.paint(g);
+        
         text.clear();
         
         Line line1 = new Line(points[0], points[1]);
         Line line2 = new Line(points[1], points[2]);
-        getCanvas().paintGrid(g);
         
         // draw lines and basic info
         g.setColor(Color.CYAN);

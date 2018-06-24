@@ -37,6 +37,7 @@ public class Shape45 {
     private Polygon outline;
     private Shape45[] subShapes;
     private Triangle[] triangles = null;
+    private Integer numEdges = null;
     private Box2D boundingBox = null;
     private Integer totalNumVertices = null;
     private int nestedDepth;
@@ -265,6 +266,45 @@ public class Shape45 {
         // index is out of range
         return -1;
     }
+
+    public int getNumEdges() {
+        if (numEdges == null)
+            buildEdges();
+        return numEdges;
+    }
+
+    /**
+     * @return The edge at index {@code index}.
+     * @throws ArrayIndexOutOfBoundsException If {@code index} is out of range;
+     */
+    public Line getEdge(int index) {
+        if (numEdges == null)
+            buildEdges();
+        
+        if (index < outline.getNumEdges())
+            return outline.getEdge(index);
+
+        // get edge recursively
+        int i = index - outline.getNumEdges();
+        for (Shape45 sub : subShapes) {
+            if (i < sub.getNumEdges())
+                return sub.getEdge(i);
+            else
+                i -= sub.getNumEdges();
+        }
+            
+        throw new ArrayIndexOutOfBoundsException("index " + index
+                                                 + " out of range (" + getNumEdges() + " edges)");
+    }
+    
+    private void buildEdges() {
+        // NOTE: Polygon.getNumEdges() triggers edges to be built
+        numEdges = outline.getNumEdges();
+        for (Shape45 sub : subShapes)
+            numEdges += sub.getNumEdges();
+    }
+
+    
     
     public Box2D getBoundingBox() {
         if (boundingBox == null)
@@ -385,9 +425,10 @@ public class Shape45 {
      */
     public int getNumOutlineSelfIntersections45() {
         int num = 0;
-        Line[] edges = outline.getEdges();
-        for (Line edge1 : edges) {
-            for (Line edge2 : edges) {
+        for (int i = 0; i < outline.getNumEdges(); i++) {
+            Line edge1 = outline.getEdge(i);
+            for (int j = 0; j < outline.getNumEdges(); j++) {
+                Line edge2 = outline.getEdge(j);
                 if (edge1 != edge2) {
                     if (Line.linesIntersect45IgnoreSharedEnds(edge1, edge2))
                         num++;
@@ -835,13 +876,13 @@ public class Shape45 {
     public List<Shape45> subtract45(Shape45 s) {
 
         // get edges
-        List<Line> homeLines = new ArrayList<>(); //getEdges());
-        for (Line edge : getOutline().getEdges())
-            homeLines.add(edge);
-        List<Line> awayLines = new ArrayList<>(); //s.getEdges());
-        for (Line edge : s.getOutline().getEdges())
-            awayLines.add(edge);
-        
+        List<Line> homeLines = new ArrayList<>();
+        List<Line> awayLines = new ArrayList<>();
+        for (int i = 0; i < getOutline().getNumEdges(); i++)
+            homeLines.add(getOutline().getEdge(i));
+        for (int i = 0; i < s.getOutline().getNumEdges(); i++)
+            awayLines.add(s.getOutline().getEdge(i));
+
         // get intersection points
         Set<IPt> iPoints = new HashSet<>();
         for (int hi = 0; hi < homeLines.size(); hi++) {
