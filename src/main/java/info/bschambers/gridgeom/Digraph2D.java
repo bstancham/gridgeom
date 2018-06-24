@@ -116,7 +116,7 @@ public class Digraph2D {
     public void addLine(Line ln, int shapeID) {
         addLine(ln.start().toFloat(), ln.end().toFloat(), shapeID);
     }
-    
+
     public void addLine(Pt2Df p1, Pt2Df p2, int shapeID) {
 
         // collect all points of new line (except start) into a sorted set so
@@ -125,10 +125,8 @@ public class Digraph2D {
             = new TreeSet<>(new Pt2Df.SmallestDistComparator(p1));
         linePoints.add(p2);
 
-        // keep track of which existing connections need to be split, and where
-        // to split them
-        List<Connection> toSplit = new ArrayList<>();
-        List<Pt2Df> splitPoints = new ArrayList<>();
+        // keep track of what splits need to be made in existing connections
+        List<SplitDirective> splitters = new ArrayList<>();
         
         // check for intersections with existing lines...
         Linef newLine = new Linef(p1, p2);
@@ -136,29 +134,85 @@ public class Digraph2D {
             for (Connection c : n.getConnectionsForward()) {
                 Linef oldLine = c.getLine();
 
-                // DEAL WITH ALL POSSIBLE SCENARIOS...
+                // DO LINES INTERSECT?
 
-                // SPECIAL CASES:
-
-                // overlapping parallel lines
-
-                // do lines intersect?
+                List<Pt2Df> ipts = new ArrayList<>();
                 if (newLine.intersects(oldLine)) {
-                    Pt2Df iPt = newLine.getIntersectionPoint(oldLine);
+                    // normal intersection
 
-                    // add node for new line
-                    // ... only if point is not same as start point or end
-                    if (!iPt.equals(newLine.start()) &&
-                        !iPt.equals(newLine.end())) {
-                        linePoints.add(iPt);
+                    Pt2Df ip = newLine.getIntersectionPoint(oldLine);
+
+                    // for new line
+                    ipts.add(ip);
+                    // linePoints.add(ip);
+
+                    // split-directive for old line
+                    if (!ip.equals(oldLine.start()) &&
+                        !ip.equals(oldLine.end())) {
+                        
+                        splitters.add(new SplitDirective(c.getOrigin().getPoint(),
+                                                         c.getDestination().getPoint(),
+                                                         ip));
                     }
 
-                    // divide old line at intersection point
-                    // ... only if point is not same as start or end
-                    if (!iPt.equals(oldLine.start()) &&
-                        !iPt.equals(oldLine.end())) {
-                        toSplit.add(c);
-                        splitPoints.add(iPt);
+                } else if (newLine.isParallel(oldLine)) {
+
+                    // new line split
+                    // ... easy - just add to line-points
+                    
+                    if (newLine.contains(oldLine.start()) &&
+                        !newLine.hasVertex(oldLine.start()))
+                        ipts.add(oldLine.start());
+                    
+                    if (newLine.contains(oldLine.end()) &&
+                        !newLine.hasVertex(oldLine.end()))
+                        ipts.add(oldLine.end());
+
+
+                    
+                    // old line split
+                    // ... 
+
+                    boolean ns =
+                        !oldLine.hasVertex(newLine.start()) &&
+                        oldLine.contains(newLine.start());
+                    boolean ne =
+                        !oldLine.hasVertex(newLine.end()) &&
+                        oldLine.contains(newLine.end());
+
+                    // both?
+                    if (ns && ne) {
+
+                        Pt2Df s = c.getOrigin().getPoint();
+                        Pt2Df i1 = newLine.start();
+                        Pt2Df i2 = newLine.end();
+                        Pt2Df e = c.getDestination().getPoint();
+                        if (Geom2D.distSquared(s, i2) < Geom2D.distSquared(s, i1)) {
+                            // i2 is nearer to start - swap order
+                            i1 = newLine.end();
+                            i2 = newLine.start();
+                        }
+                        splitters.add(new SplitDirective(s, e, i1));
+                        splitters.add(new SplitDirective(i1, e, i2));
+                        
+                    } else if (ns) {
+                        splitters.add(new SplitDirective(c.getOrigin().getPoint(),
+                                                         c.getDestination().getPoint(),
+                                                         newLine.start()));
+                    } else if (ne) {
+                        splitters.add(new SplitDirective(c.getOrigin().getPoint(),
+                                                         c.getDestination().getPoint(),
+                                                         newLine.end()));
+                    }
+
+                }
+
+                for (Pt2Df ip : ipts) {
+                    // add node for new line
+                    // ... only if point is not same as start point or end
+                    if (!ip.equals(newLine.start()) &&
+                        !ip.equals(newLine.end())) {
+                        linePoints.add(ip);
                     }
                 }
             }   
@@ -171,19 +225,47 @@ public class Digraph2D {
             origin = dest;
         }
 
-        // split existing connections as required
-        for (int i = 0; i < toSplit.size(); i++) {
-            Connection c = toSplit.get(i);
-            Pt2Df p = splitPoints.get(i);
-            // get rid of old connection
-            c.getOrigin().removeConnection(c.getDestination());
-            // add two new connections
-            Node iNode = getAndAddNode(p);
-            c.getOrigin().addConnection(iNode, c.getIDs());
-            iNode.addConnection(c.getDestination(), c.getIDs());
+        for (SplitDirective sd : splitters) {
+            boolean result = splitConnection(sd);
         }
     }
 
+    private boolean splitConnection(SplitDirective sd) {
+        Connection c = getConnection(sd.start, sd.end);
+        if (c == null)
+            return false;
+
+        // get rid of old connection
+        c.getOrigin().removeConnection(c.getDestination());
+        // add two new connections
+        Node inode = getAndAddNode(sd.splitPoint);
+        c.getOrigin().addConnection(inode, c.getIDs());
+        inode.addConnection(c.getDestination(), c.getIDs());
+        return true;
+    }
+
+    /**
+     * <p>Gets the {@code Connection} from {@code origin} to {@code
+     * destination}, if it exists - otherwise returns {@code null}.</p>
+     */
+    private Connection getConnection(Pt2Df origin, Pt2Df destination) {
+        Node n = getNode(origin);
+        if (n == null)
+            return null;
+        return n.getConnection(destination);
+    }
+
+    private class SplitDirective {
+        public final Pt2Df start;
+        public final Pt2Df end;
+        public final Pt2Df splitPoint;
+        public SplitDirective(Pt2Df start, Pt2Df end, Pt2Df splitPoint) {
+            this.start = start;
+            this.end = end;
+            this.splitPoint = splitPoint;
+        }
+    }
+    
     /**
      * <p>Adds a connection between {@code Node} at point {@code p1} and {@code
      * Node} at point {@code p2}, creating each {@code Node} if it doesn't
@@ -303,6 +385,8 @@ public class Digraph2D {
         }
 
         public void addConnection(Connection c) {
+            if (c.getDestination() == this)
+                throw new IllegalArgumentException("Node may not be connected to itself");
             connections.add(c);
             c.getDestination().backwardConnections.add(c);
         }
@@ -311,6 +395,18 @@ public class Digraph2D {
             // does connection exist already?
             for (Connection c : connections)
                 if (c.getDestination().equals(n))
+                    return c;
+            return null;
+        }
+
+        /**
+         * @return The {@code Connection} from this {@code Node} to the {@code
+         * Node} at point {@code p}, or returns {@code null} if no such {@code
+         * Connection} exists.
+         */
+        private Connection getConnection(Pt2Df p) {
+            for (Connection c : connections)
+                if (c.getDestination().getPoint().equals(p))
                     return c;
             return null;
         }

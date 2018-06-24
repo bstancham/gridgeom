@@ -1,7 +1,8 @@
 package info.bschambers.gridgeom;
 
 /**
- * <p>Immutable data type representing a line with {@code int} co-ordinates.</p>
+ * <p>Immutable data type representing a line segment with {@code int}
+ * co-ordinates.</p>
  */
 public class Line {
 

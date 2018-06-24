@@ -188,6 +188,10 @@ public class Geom2D {
         return dist(p1.x(), p1.y(), p2.x(), p2.y());
     }
 
+    public static double dist(Pt2Df p1, Pt2Df p2) {
+        return dist(p1.x(), p1.y(), p2.x(), p2.y());
+    }
+
     public static double dist(double x1, double y1, double x2, double y2) {
         return Math.sqrt(distSquared(x1, y1, x2, y2));
     }

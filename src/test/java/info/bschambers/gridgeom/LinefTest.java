@@ -182,5 +182,45 @@ public class LinefTest {
         assertEquals(new Pt2Df(10f, 25f), lnNon452.getIntersectionPoint(lnVert1)); // non-45
         assertEquals(new Pt2Df(3, -6), lnNon451.getIntersectionPoint(lnDiagPos2)); // non-45
     }
+
+    @Test
+    public void testContains45() {
+        // horizontal
+        assertTrue(lnHoriz1.contains45(new Pt2Df(21, 8)));
+        assertFalse(lnHoriz1.contains45(new Pt2Df(29, 8)));
+        // vertical
+        assertTrue(lnVert1.contains45(new Pt2Df(10, 9)));
+        assertFalse(lnVert1.contains45(new Pt2Df(10.1f, 9)));
+        // diag45
+        assertTrue(lnDiagPos1.contains45(new Pt2Df(3.5f, 6.5f)));
+        assertFalse(lnDiagPos1.contains45(new Pt2Df(4f, 6.5f)));
+        assertTrue(lnDiagNeg1.contains45(new Pt2Df(1, 2)));
+        assertFalse(lnDiagNeg1.contains45(new Pt2Df(7, 4)));
+        // non-45 (return false for ALL non-45 lines, even if intersection is valid)
+        assertFalse(lnNon451.contains45(new Pt2Df(8f, -7.25f)));
+        assertFalse(lnNon451.contains45(new Pt2Df(3, -6)));
+        assertFalse(lnNon452.contains45(new Pt2Df(1.5f, 8f)));
+        assertFalse(lnNon452.contains45(new Pt2Df(2, 8)));
+    }
+    
+    @Test
+    public void testContains() {
+        // horizontal
+        assertTrue(lnHoriz1.contains(new Pt2Df(21, 8)));
+        assertFalse(lnHoriz1.contains(new Pt2Df(29, 8)));
+        // vertical
+        assertTrue(lnVert1.contains(new Pt2Df(10, 9)));
+        assertFalse(lnVert1.contains(new Pt2Df(10.1f, 9)));
+        // diag45
+        assertTrue(lnDiagPos1.contains(new Pt2Df(3.5f, 6.5f)));
+        assertFalse(lnDiagPos1.contains(new Pt2Df(4f, 6.5f)));
+        assertTrue(lnDiagNeg1.contains(new Pt2Df(1, 2)));
+        assertFalse(lnDiagNeg1.contains(new Pt2Df(7, 4)));
+        // non-45
+        assertTrue(lnNon451.contains(new Pt2Df(8f, -7.25f)));
+        assertFalse(lnNon451.contains(new Pt2Df(3, -6)));
+        assertTrue(lnNon452.contains(new Pt2Df(1.5f, 8f)));
+        assertFalse(lnNon452.contains(new Pt2Df(2, 8)));
+    }
     
 }

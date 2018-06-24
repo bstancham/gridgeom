@@ -1,7 +1,7 @@
 package info.bschambers.gridgeom;
 
 /**
- * <p>Immutable data type representing a line with {@code float}
+ * <p>Immutable data type representing a line segment with {@code float}
  * co-ordinates.</p>
  */
 public class Linef {
@@ -123,6 +123,13 @@ public class Linef {
 
     public boolean isParallel(Linef ln) {
         return slope() == ln.slope();
+    }
+
+    /**
+     * @return True, if point {@code p} equals start or end point of this line.
+     */
+    public boolean hasVertex(Pt2Df p) {
+        return p.equals(start) || p.equals(end);
     }
 
     
@@ -303,6 +310,23 @@ public class Linef {
                     == Geom2D.distAbs(p.y(), start.y());
             }
         }
+        return false;
+    }
+
+    /**
+     * <p>Redirects to {@code contains45} if line is 45-compliant, therefore for
+     * 45-compliant lines, absolute accuracy can be guaranteed.</p>
+     *
+     * @return True, if point {@code p} is a point on this line segment.
+     */
+    public boolean contains(Pt2Df p) {
+
+        if (is45Compliant())
+            return contains45(p);
+
+        if (boundingBoxContains(p))
+            return slope() == start().slopeTo(p);
+
         return false;
     }
 

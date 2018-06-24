@@ -35,7 +35,6 @@ public class Geom2DTest {
         assertEquals(-1, Geom2D.turnDirection(p1, p2, p3)); // LEFT/CCW
         assertEquals(1, Geom2D.turnDirection(p1, p3, p2)); // RIGHT/CW
         assertEquals(0, Geom2D.turnDirection(p1, p3, p4)); // NO TURN
-        
     }
 
     @Test
@@ -59,4 +58,29 @@ public class Geom2DTest {
         assertFalse(Geom2D.collinear(vert1, vert2, p1));
     }
 
+    @Test
+    public void testDist() {
+
+        // points on vertical line
+        Pt2Df vert1 = new Pt2Df (21, 17);
+        Pt2Df vert2 = new Pt2Df (21, 12);
+        Pt2Df vert3 = new Pt2Df (21, 6);
+        Pt2Df vert4 = new Pt2Df (21, 3);
+        assertEquals(5.0, Geom2D.dist(vert1, vert2), EXACT);
+        assertEquals(25.0, Geom2D.distSquared(vert1, vert2), EXACT);
+        assertEquals(14.0, Geom2D.dist(vert4, vert1), EXACT);
+        assertEquals(196.0, Geom2D.distSquared(vert4, vert1), EXACT);
+
+        // diagonal
+        Pt2Df diag1 = new Pt2Df (21, 17);
+        Pt2Df diag2 = new Pt2Df (24, 21);
+        assertEquals(5.0, Geom2D.dist(diag1, diag2), EXACT); // dist: x=3, y=4
+        assertEquals(25.0, Geom2D.distSquared(diag1, diag2), EXACT);
+        // diagonal (the other way)
+        diag1 = new Pt2Df (-3, 13);
+        diag2 = new Pt2Df (1, 10);
+        assertEquals(5.0, Geom2D.dist(diag1, diag2), EXACT);
+        assertEquals(25.0, Geom2D.distSquared(diag1, diag2), EXACT);
+    }
+    
 }

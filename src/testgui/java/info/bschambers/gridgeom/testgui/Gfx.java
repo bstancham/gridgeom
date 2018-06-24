@@ -317,22 +317,26 @@ public class Gfx {
                 // shape-ids, so we will shift the line one step further to the
                 // side and re-draw it each time
                 Linef line = c.getLine();
-                double shiftRadius = 0.2;
-                // set ends slightly short so that arrowheads don't look muddled
-                Pt2Df startShift = Geom2D.circlePoint(line.angle(),
-                                                      shiftRadius).toFloat();
-                Pt2Df endShift = Geom2D.circlePoint(line.angle() + Geom2D.HALF_TURN,
-                                                    shiftRadius).toFloat();
-                // to shift sideways
-                Pt2Df multiShift = Geom2D.circlePoint(line.angle() + Geom2D.QUARTER_TURN,
-                                                      shiftRadius).toFloat();
-                Linef newLine = new Linef(line.start().sum(startShift),
-                                          line.end().sum(endShift));
-                // shift and repaint arrow in different color for each shape-id
-                for (Integer id : c.getIDs()) {
-                    g.setColor(connectionColors[id % connectionColors.length]);
-                    newLine = newLine.shift(multiShift);
-                    arrow(g, newLine);
+                if (line.isDegenerate()) {
+                    System.out.println("WARNING! Degenerate line in Gfx.digraph()");
+                } else {
+                    double shiftRadius = 0.2;
+                    // set ends slightly short so that arrowheads don't look muddled
+                    Pt2Df startShift = Geom2D.circlePoint(line.angle(),
+                                                          shiftRadius).toFloat();
+                    Pt2Df endShift = Geom2D.circlePoint(line.angle() + Geom2D.HALF_TURN,
+                                                        shiftRadius).toFloat();
+                    // to shift sideways
+                    Pt2Df multiShift = Geom2D.circlePoint(line.angle() + Geom2D.QUARTER_TURN,
+                                                          shiftRadius).toFloat();
+                    Linef newLine = new Linef(line.start().sum(startShift),
+                                              line.end().sum(endShift));
+                    // shift and repaint arrow in different color for each shape-id
+                    for (Integer id : c.getIDs()) {
+                        g.setColor(connectionColors[id % connectionColors.length]);
+                        newLine = newLine.shift(multiShift);
+                        arrow(g, newLine);
+                    }
                 }
             }
         }
