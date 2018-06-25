@@ -74,8 +74,10 @@ public class Geom2D {
         double angleAB = lineAngle(a,b);
         double angleBC = lineAngle(b,c);
         boolean onLeftSide = onRelativeLeftSide(new Linef(a,b), c);
-        if (onLeftSide && angleAB < angleBC) angleAB += (Math.PI * 2);
-        if (!onLeftSide && angleAB > angleBC) angleBC += (Math.PI * 2);
+        if (onLeftSide && angleAB < angleBC)
+            angleAB += (Math.PI * 2);
+        if (!onLeftSide && angleAB > angleBC)
+            angleBC += (Math.PI * 2);
         return angleAB - angleBC;
     }
 
@@ -242,7 +244,8 @@ public class Geom2D {
 
     public static boolean onRelativeLeftSide(Linef line, Pt2Df p) {
 	// SPECIAL CASE: point is on line...
-	if (pointIsOnLine(line, p)) return false;
+	if (pointIsOnLine(line, p))
+            return false;
 	// SPECIAL CASE: vertical line...
 	if (line.isVert()) {
 	    if (line.startY() < line.endY()) { // pointing upwards
@@ -254,6 +257,26 @@ public class Geom2D {
 	// ... ALL OTHER LINES
 	boolean out = p.y() > getPointForXValue(line, p.x()).y();
 	if (line.endX() > line.startX())
+            return out;
+        else
+            return !out;
+    }
+
+    public static boolean onRelativeRightSide(Linef line, Pt2Df p) {
+	// SPECIAL CASE: point is on line...
+	if (pointIsOnLine(line, p))
+            return false;
+	// SPECIAL CASE: vertical line...
+	if (line.isVert()) {
+	    if (line.startY() < line.endY()) { // pointing upwards
+		return p.x() > line.startX();
+	    } else { // pointing downwards
+		return p.x() < line.startX();
+	    }
+	}
+	// ... ALL OTHER LINES
+	boolean out = p.y() > getPointForXValue(line, p.x()).y();
+	if (line.endX() < line.startX())
             return out;
         else
             return !out;

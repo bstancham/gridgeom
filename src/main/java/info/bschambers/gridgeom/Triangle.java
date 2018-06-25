@@ -65,4 +65,35 @@ public class Triangle extends Polygon {
         return degenerate;
     }
 
+    public boolean contains(Pt2D p) {
+        return contains(p, true);
+    }
+
+    public boolean containsExcludeEdges(Pt2D p) {
+        return contains(p, false);
+    }
+
+    private boolean contains(Pt2D p, boolean includeEdges) {
+        if (isDegenerate() ||
+            (!isCCWWinding() && !isCWWinding()))
+            return false;
+
+        for (int i = 0; i < getNumEdges(); i++) {
+            Line edge = getEdge(i);
+
+            // can exit early if point is on edge
+            if (edge.contains(p))
+                return includeEdges;
+
+            if (isCCWWinding()) {
+                if (!Geom2D.onRelativeLeftSide(edge.toFloat(), p.toFloat()))
+                    return false;
+            } else {
+                if (!Geom2D.onRelativeRightSide(edge.toFloat(), p.toFloat()))
+                    return false;
+            }
+        }
+        return true;
+    }
+
 }

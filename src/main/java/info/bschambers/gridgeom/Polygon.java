@@ -62,14 +62,14 @@ public class Polygon implements Iterable<Pt2D> {
             polyEdges[i] = new Line(vertices[i], getVertexWrapped(i + 1));
     }
 
-    public boolean containsVertex(Pt2D v) {
+    public boolean hasVertex(Pt2D v) {
         for (Pt2D vv : this)
             if (v.equals(vv))
                 return true;
         return false;
     }
     
-    public boolean containsVertex(Pt2Df v) {
+    public boolean hasVertex(Pt2Df v) {
         for (Pt2D vv : this)
             if (vv.equalsValue(v))
                 return true;
@@ -123,7 +123,7 @@ public class Polygon implements Iterable<Pt2D> {
 
         // check each intersection point against vertices
         for (Pt2Df p : ipts) {
-            if (!containsVertex(p))
+            if (!hasVertex(p))
                 return true;
             if (!ln.start().equalsValue(p) &&
                 !ln.end().equalsValue(p))
@@ -142,7 +142,7 @@ public class Polygon implements Iterable<Pt2D> {
         // check each intersection point against vertices
         for (Pt2Df p : ipts) {
 
-            boolean pContains = containsVertex(p);
+            boolean pContains = hasVertex(p);
             boolean ls = ln.start().equalsValue(p);
             boolean le = ln.end().equalsValue(p);
             
@@ -226,7 +226,7 @@ public class Polygon implements Iterable<Pt2D> {
 
         // check each intersection point against vertices
         for (Pt2Df p : ipts) {
-            if (!containsVertex(p))
+            if (!hasVertex(p))
                 return true;
             if (!ln.start().equalsValue(p) &&
                 !ln.end().equalsValue(p))
@@ -244,8 +244,8 @@ public class Polygon implements Iterable<Pt2D> {
 
         // check each intersection point against vertices
         for (Pt2Df p : ipts) {
-            if (!containsVertex(p)) return true;
-            if (!poly.containsVertex(p)) return true;
+            if (!hasVertex(p)) return true;
+            if (!poly.hasVertex(p)) return true;
         }
         
         return false;

@@ -28,16 +28,12 @@ public class TriangleTest {
 
     @Test
     public void testWindingDir() {
-
         assertTrue(t1.isCCWWinding());
         assertFalse(t1.isCWWinding());
-
         assertTrue(t2.isCWWinding());
         assertFalse(t2.isCCWWinding());
-
         assertFalse(degenerate1.isCWWinding());
         assertFalse(degenerate1.isCCWWinding());
-
     }
 
 }

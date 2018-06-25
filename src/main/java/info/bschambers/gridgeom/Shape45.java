@@ -669,7 +669,7 @@ public class Shape45 {
                     Pt2D v = Geom2D.midPointInt(getOutline().getVertex(i),
                                                 getOutline().getVertexWrapped(i + 1));
                     // make sure not duplicate vertex before adding it
-                    while (getOutline().containsVertex(v))
+                    while (getOutline().hasVertex(v))
                         v = v.transpose(0, 1);
                     newVertices[i + 1] = v;
                 }

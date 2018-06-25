@@ -515,7 +515,7 @@ public class ShapeGroup implements Iterable<Shape45> {
     
     
     /*---------------------------- GEOMETRY ----------------------------*/
-    
+
     private void triangulate() {
 
         int count = 0;
@@ -531,6 +531,45 @@ public class ShapeGroup implements Iterable<Shape45> {
             }
         }
     }
+
+
+    
+    public boolean contains(Pt2D p) {
+        return contains(p, true);
+    }
+    
+    public boolean containsExcludeEdges(Pt2D p) {
+        return contains(p, false);
+    }
+    
+    private boolean contains(Pt2D p, boolean includeEdges) {
+
+        if (!includeEdges) {
+            for (int i = 0; i < getNumEdges(); i++) {
+                if (getEdge(i).contains(p)) {
+                    return includeEdges;
+                }
+            }
+        }
+        
+        for (int i = 0; i < getNumTriangles(); i++) {
+            Triangle t = getTriangle(i);
+            if (t.contains(p)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // public boolean contains(Pt2D p) {
+    //     for (int i = 0; i < getNumTriangles(); i++) {
+    //         Triangle t = getTriangle(i);
+    //         if (t.contains(p)) {
+    //             return true;
+    //         }
+    //     }
+    //     return false;
+    // }
 
     /**
      * <p>TODO: </p>
