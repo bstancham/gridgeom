@@ -205,7 +205,7 @@ public class Line {
      */
     public boolean contains45(Pt2Df p) {
         if (boundingBoxContains(p)) {
-            if (isHoriz() | isVert())
+            if (isHoriz() || isVert())
                 return true;
             if (isDiag45()) {
                 return Geom2D.distAbs(p.x(), start.x())

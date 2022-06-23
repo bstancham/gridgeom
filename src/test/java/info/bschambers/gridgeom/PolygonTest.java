@@ -2,8 +2,8 @@ package info.bschambers.gridgeom;
 
 import java.util.Set;
 import java.util.HashSet;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import static info.bschambers.gridgeom.Geom2D.WindingDir;
 
 public class PolygonTest {

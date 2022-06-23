@@ -233,6 +233,7 @@ public class Geom2D {
         return lineAngle(points[0], points[1]) == lineAngle(points[0], points[2]);
         
         // return lineAngle(a, b) == lineAngle(a, c);
+
     }
     
     // /**

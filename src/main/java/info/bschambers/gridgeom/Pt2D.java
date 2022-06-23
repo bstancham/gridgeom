@@ -27,6 +27,7 @@ public class Pt2D implements Comparable<Pt2D> {
         // some safe optimizations
         if (obj == this) return true;
         if (obj == null) return false;
+        if (!(obj instanceof Pt2D)) return false;
         // cast guaranteed to succeed here
         Pt2D that = (Pt2D) obj;
         // test for equality in all significant fields

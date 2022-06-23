@@ -68,7 +68,7 @@ public class Polygon implements Iterable<Pt2D> {
                 return true;
         return false;
     }
-    
+
     public boolean hasVertex(Pt2Df v) {
         for (Pt2D vv : this)
             if (vv.equalsValue(v))
@@ -76,7 +76,7 @@ public class Polygon implements Iterable<Pt2D> {
         return false;
     }
 
-    
+
 
     /*---------------- INTERSECTION (non-45 compliant) -----------------*/
 
@@ -94,7 +94,7 @@ public class Polygon implements Iterable<Pt2D> {
         }
         return points;
     }
-    
+
     public Set<Pt2Df> getIntersectionPointsIncludeParallel(Line ln) {
         Set<Pt2Df> points = new HashSet<>();
         // intersect all lines
@@ -114,10 +114,10 @@ public class Polygon implements Iterable<Pt2D> {
         }
         return points;
     }
-    
+
     public boolean intersectsIgnoreSharedVertices(Line ln) {
         Set<Pt2Df> ipts = getIntersectionPoints(ln);
-        
+
         if (ipts.size() == 0)
             return false;
 
@@ -129,13 +129,13 @@ public class Polygon implements Iterable<Pt2D> {
                 !ln.end().equalsValue(p))
                 return true;
         }
-        
+
         return false;
     }
-    
+
     public boolean intersectsIgnoreSharedVerticesIncludeParallel(Line ln) {
         Set<Pt2Df> ipts = getIntersectionPointsIncludeParallel(ln);
-        
+
         if (ipts.size() == 0)
             return false;
 
@@ -145,7 +145,7 @@ public class Polygon implements Iterable<Pt2D> {
             boolean pContains = hasVertex(p);
             boolean ls = ln.start().equalsValue(p);
             boolean le = ln.end().equalsValue(p);
-            
+
             if (!pContains) return true;
             if (!ls && !le) return true;
 
@@ -153,10 +153,10 @@ public class Polygon implements Iterable<Pt2D> {
             if (!pContains && (ls || le)) return true;
 
         }
-        
+
         return false;
     }
-    
+
 
 
     /*------------------ INTERSECTION (45-compliant) -------------------*/
@@ -175,7 +175,7 @@ public class Polygon implements Iterable<Pt2D> {
         }
         return points;
     }
-    
+
     public Set<Pt2Df> getIntersectionPointsIncludeParallel45(Line ln) {
         Set<Pt2Df> points = new HashSet<>();
         // intersect all lines
@@ -195,7 +195,7 @@ public class Polygon implements Iterable<Pt2D> {
         }
         return points;
     }
-    
+
     public Set<Pt2Df> getIntersectionPoints45(Polygon s) {
         Set<Pt2Df> points = new HashSet<>();
         // intersect all lines
@@ -217,10 +217,10 @@ public class Polygon implements Iterable<Pt2D> {
         }
         return points;
     }
-    
+
     public boolean intersectsIgnoreSharedVertices45(Line ln) {
         Set<Pt2Df> ipts = getIntersectionPoints45(ln);
-        
+
         if (ipts.size() == 0)
             return false;
 
@@ -232,13 +232,13 @@ public class Polygon implements Iterable<Pt2D> {
                 !ln.end().equalsValue(p))
                 return true;
         }
-        
+
         return false;
     }
-    
+
     public boolean intersectsIgnoreSharedVertices45(Polygon poly) {
         Set<Pt2Df> ipts = getIntersectionPoints45(poly);
-        
+
         if (ipts.size() == 0)
             return false;
 
@@ -247,11 +247,11 @@ public class Polygon implements Iterable<Pt2D> {
             if (!hasVertex(p)) return true;
             if (!poly.hasVertex(p)) return true;
         }
-        
+
         return false;
     }
 
-    
+
 
     /*--------------------------- DIAGNOSTIC ---------------------------*/
 
@@ -313,11 +313,11 @@ public class Polygon implements Iterable<Pt2D> {
         convex = numZero == 0 &&
             (numLeftTurns == 0 || numRightTurns == 0);
     }
-    
+
     public boolean isCWWinding() {
         return getWindingDir() == WindingDir.CW;
     }
-    
+
     public boolean isCCWWinding() {
         return getWindingDir() == WindingDir.CCW;
     }
@@ -368,7 +368,7 @@ public class Polygon implements Iterable<Pt2D> {
         }
     }
 
-    
+
 
     /*-------------- TRANSFORMATIONS (return new Polygon) --------------*/
 
@@ -459,12 +459,12 @@ public class Polygon implements Iterable<Pt2D> {
         private int a = 0;
         private int b = 0;
         private int c = 0;
-        
+
         private int countSinceLast = 0;
         private boolean failed = false;
 
         private List<Triangle> tris = new ArrayList<>();
-        
+
         public EarClippingTriangulator(Polygon p) {
             poly = p;
             used = new boolean[poly.getNumVertices()];
@@ -480,7 +480,7 @@ public class Polygon implements Iterable<Pt2D> {
                 Triangle t = new Triangle(poly.getVertex(a),
                                           poly.getVertex(b),
                                           poly.getVertex(c));
-                
+
                 if (!triangleIntersects() &&
                     t.isCCWWinding() &&
                     angleIsInside()) {
@@ -493,7 +493,7 @@ public class Polygon implements Iterable<Pt2D> {
                     // failed: move start point to next index
                     a = b;
                 }
-                
+
                 System.out.format("a=%s, b=%s, c=%s --- %s triangles --- remaining: %s\n",
                                   a, b, c, tris.size(), remainString());
             }
@@ -521,7 +521,7 @@ public class Polygon implements Iterable<Pt2D> {
             // prevent infinite loop on failure
             if (countSinceLast > used.length * 5)
                 failed = true;
-            
+
             return i;
         }
 
@@ -565,7 +565,7 @@ public class Polygon implements Iterable<Pt2D> {
                                       poly.getVertex(c),
                                       poly.getVertex(d));
         }
-        
+
         private String remainString() {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < used.length; i++) {
@@ -576,7 +576,7 @@ public class Polygon implements Iterable<Pt2D> {
             }
             return sb.toString();
         }
-        
+
     }
 
 }
