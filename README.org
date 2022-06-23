@@ -1,0 +1,32 @@
+#+TITLE: GRIDGEOM
+
+* Introduction
+
+/gridgeom-version: 0.5.0/
+
+Another dodgy homemade 2D geometry library.
+
+2D geometry, constrained to an integer-value grid.
+
+* Compilation
+
+Build, run tests and copy jar file to ~/lib:
+
+: $ gradlew all
+
+Build documentation:
+
+: $ gradlew javadoc
+
+* Interactive GUI Test Suite
+** Run the Interactive GUI
+
+: $ ./run-testgui.sh
+
+** Interactive GUI Features
+- Shape-Intersection (may crash the program)
+
+* Dependencies
+- Java (11)
+- JUnit (5.0.0 (jupiter))
+- Gradle (7.4.2
