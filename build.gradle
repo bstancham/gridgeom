@@ -64,7 +64,7 @@ dependencies {
 //     from(sourceSets.testgui)
     
 //     // from('src/testgui/java/info/bschambers/gridtriang/testgui/App.java')
-//     // from('info.bschambers.gridtriang.testgui.App')
+//     // from('info.bstancham.gridtriang.testgui.App')
 // }
 
 // add command line arguments
